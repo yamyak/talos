@@ -4,6 +4,8 @@
 
 Board::Board()
 {
+	m_mode = Common::Color::WHITE;
+
 	// resizes the piece matrix to the correct sizes
 	m_matrix.resize(Common::BOARD_LENGTH);
 	for (std::vector<Piece *> & v : m_matrix)
@@ -73,6 +75,11 @@ Board::~Board()
 {
 }
 
+int Board::Transpose(int val)
+{
+	return Common::BOARD_LENGTH - 1 - val;
+}
+
 // adds the pointer to the piece to both the player list and the piece matrix
 void Board::AddPiece(Piece * piece, bool white)
 {
@@ -85,18 +92,18 @@ void Board::AddPiece(Piece * piece, bool white)
 		m_blackPieces.push_back(piece);
 	}
 
-	Common::Location loc = piece->GetLocation();
-	m_matrix[loc.x][loc.y] = piece;
+	std::pair<int, int> loc = piece->GetLocation();
+	m_matrix[loc.first][loc.second] = piece;
 }
 
 // returns the x, y coordinates to the king piece for the specified color
-Common::Location Board::GetKingLocation(Common::Color color)
+std::pair<int, int> Board::GetKingLocation(Common::Color color)
 {
 	std::vector<Piece *> * pieces;
 
 	pieces = (color == Common::Color::WHITE) ? &m_whitePieces : &m_blackPieces;
 
-	Common::Location loc;
+	std::pair<int, int> loc;
 
 	// iterates through all the pieces for the specified color
 	// trying to find the king piece
@@ -108,6 +115,9 @@ Common::Location Board::GetKingLocation(Common::Color color)
 		}
 	}
 
+	loc.first = (m_mode == Common::Color::WHITE) ? loc.first : Transpose(loc.first);
+	loc.second = (m_mode == Common::Color::WHITE) ? loc.second : Transpose(loc.second);
+
 	return loc;
 }
 
@@ -118,7 +128,9 @@ void Board::GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vecto
 	{
 		Common::PieceInfo info;
 		info.type = p->GetType();
-		info.loc = p->GetLocation();
+		std::pair<int, int> loc = p->GetLocation();
+		info.x = (m_mode == Common::Color::WHITE) ? loc.first : Transpose(loc.first);
+		info.y = (m_mode == Common::Color::WHITE) ? loc.second : Transpose(loc.second);
 
 		white.push_back(info);
 	}
@@ -127,7 +139,9 @@ void Board::GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vecto
 	{
 		Common::PieceInfo info;
 		info.type = p->GetType();
-		info.loc = p->GetLocation();
+		std::pair<int, int> loc = p->GetLocation();
+		info.x = (m_mode == Common::Color::WHITE) ? loc.first : Transpose(loc.first);
+		info.y = (m_mode == Common::Color::WHITE) ? loc.second : Transpose(loc.second);
 
 		black.push_back(info);
 	}
@@ -136,16 +150,21 @@ void Board::GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vecto
 // applys the move specified
 void Board::ApplyMove(Common::MoveRequest & move)
 {
+	int xOld = (m_mode == Common::Color::WHITE) ? move.xOld : Transpose(move.xOld);
+	int yOld = (m_mode == Common::Color::WHITE) ? move.yOld : Transpose(move.yOld);
+	int xNew = (m_mode == Common::Color::WHITE) ? move.xNew : Transpose(move.xNew);
+	int yNew = (m_mode == Common::Color::WHITE) ? move.yNew : Transpose(move.yNew);
+
 	// retrieve the piece to be moved
-	Piece * p = m_matrix[move.oldLoc.x][move.oldLoc.y];
+	Piece * p = m_matrix[xOld][yOld];
 	// clear out the old piece location
-	m_matrix[move.oldLoc.x][move.oldLoc.y] = nullptr;
+	m_matrix[xOld][yOld] = nullptr;
 
 	// check if new location is not empty
-	if (m_matrix[move.newLoc.x][move.newLoc.y] != nullptr)
+	if (m_matrix[xNew][yNew] != nullptr)
 	{
 		// retrieve the piece that will be killed and delete it
-		Piece * dead = m_matrix[move.newLoc.x][move.newLoc.y];
+		Piece * dead = m_matrix[xNew][yNew];
 		delete dead;
 		dead = nullptr;
 
@@ -173,18 +192,14 @@ void Board::ApplyMove(Common::MoveRequest & move)
 	}
 
 	// move piece to new location and update its internal coordinates
-	m_matrix[move.newLoc.x][move.newLoc.y] = p;
-	p->SetLocation(move.newLoc.x, move.newLoc.y);
-}
-
-// get the piece at the coordinates in the specified location obj
-Piece * Board::GetPiece(Common::Location loc)
-{
-	return m_matrix[loc.x][loc.y];
+	m_matrix[xNew][yNew] = p;
+	p->SetLocation(xNew, yNew);
 }
 
 // get the piece at the specified x, y coordinates
 Piece * Board::GetPiece(int x, int y)
 {
-	return m_matrix[x][y];
+	int xVal = (m_mode == Common::Color::WHITE) ? x : Transpose(x);
+	int yVal = (m_mode == Common::Color::WHITE) ? y : Transpose(y);
+	return m_matrix[xVal][yVal];
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include "King.h"
 #include "Queen.h"
 #include "Rook.h"
@@ -13,13 +14,13 @@ public:
 	Board();
 	~Board();
 
-	Common::Location GetKingLocation(Common::Color color);
+	std::pair<int, int> GetKingLocation(Common::Color color);
 	void GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vector<Common::PieceInfo> & black);
 	void ApplyMove(Common::MoveRequest & move);
-	Piece * GetPiece(Common::Location loc);
 	Piece * GetPiece(int x, int y);
 
 private:
+	Common::Color m_mode;
 	// structures that hold the pieces split into opposing sides
 	// makes it easier to provide players with their corresponding pieces
 	std::vector<Piece *> m_blackPieces;
@@ -31,5 +32,7 @@ private:
 	// initialization function used when setting up the board
 	// DON'T NEED TO SEND IN THE COLOR ANYMORE
 	void AddPiece(Piece * piece, bool white);
+
+	int Transpose(int val);
 };
 

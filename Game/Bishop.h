@@ -8,6 +8,6 @@ public:
 	Bishop(int x, int y, Common::Color color);
 	~Bishop();
 
-	std::vector<Common::Location> GetAvailableMoves();
+	std::vector<std::pair<int, int>> GetAvailableMoves();
 };
 

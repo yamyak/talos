@@ -8,6 +8,6 @@ public:
 	Queen(int x, int y, Common::Color color);
 	~Queen();
 
-	std::vector<Common::Location> GetAvailableMoves();
+	std::vector<std::pair<int, int>> GetAvailableMoves();
 };
 

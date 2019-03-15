@@ -23,9 +23,9 @@ private:
 	void TransposeLocations(std::vector<Common::PieceInfo> & whiteLocs, std::vector<Common::PieceInfo> & blackLocs);
 	void TransposeMoveRequest(Common::MoveRequest & move);
 	bool CheckMoveRequest(Common::MoveRequest & move, Common::Color color);
-	bool CheckMovePath(Piece * piece, Common::Location target);
-	bool CheckStraightPathForAggressors(Common::Location start, int xStep, int yStep, Common::Color color, std::set<Common::PieceType> types);
-	bool CheckPathForObstacles(Piece * piece, Common::Location target);
+	bool CheckMovePath(Piece * piece, int x, int y);
+	bool CheckStraightPathForAggressors(int x, int y, int xStep, int yStep, Common::Color color, std::set<Common::PieceType> types);
+	bool CheckPathForObstacles(Piece * piece, int x, int y);
 	bool CheckIfKingInCheck(Common::Color color);
 };
 

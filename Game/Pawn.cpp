@@ -12,10 +12,11 @@ Pawn::~Pawn()
 {
 }
 
-std::vector<Common::Location> Pawn::GetAvailableMoves()
+std::vector<std::pair<int, int>> Pawn::GetAvailableMoves()
 {
-	std::vector<Common::Location> locs;
-
+	
+	std::vector<std::pair<int, int>> locs;
+	/*
 	for (int i = 1; i < 3; i++)
 	{
 		if (Common::CheckIfOnBoard(this->GetLocation().x, this->GetLocation().y + i))
@@ -56,7 +57,7 @@ std::vector<Common::Location> Pawn::GetAvailableMoves()
 
 		locs.push_back(loc);
 	}
-
+	*/
 	return locs;
 }
 

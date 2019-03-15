@@ -12,10 +12,10 @@ Algorithm::~Algorithm()
 Common::MoveRequest Algorithm::CalculateMove(std::vector<Common::PieceInfo> & mine, std::vector<Common::PieceInfo> & theirs)
 {
 	Common::MoveRequest move;
-	move.newLoc.x = 0;
-	move.newLoc.y = 0;
-	move.oldLoc.x = 0;
-	move.oldLoc.y = 0;
+	move.xNew = 0;
+	move.yNew = 0;
+	move.xOld = 0;
+	move.yOld = 0;
 
 	return move;
 }

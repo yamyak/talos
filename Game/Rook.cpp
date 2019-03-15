@@ -11,8 +11,8 @@ Rook::~Rook()
 {
 }
 
-std::vector<Common::Location> Rook::GetAvailableMoves()
+std::vector<std::pair<int, int>> Rook::GetAvailableMoves()
 {
-	std::vector<Common::Location> locs;
+	std::vector<std::pair<int, int>> locs;
 	return locs;
 }

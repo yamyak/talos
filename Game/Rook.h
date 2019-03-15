@@ -8,6 +8,6 @@ public:
 	Rook(int x, int y, Common::Color color);
 	~Rook();
 
-	std::vector<Common::Location> GetAvailableMoves();
+	std::vector<std::pair<int, int>> GetAvailableMoves();
 };
 

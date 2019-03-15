@@ -11,8 +11,8 @@ Queen::~Queen()
 {
 }
 
-std::vector<Common::Location> Queen::GetAvailableMoves()
+std::vector<std::pair<int, int>> Queen::GetAvailableMoves()
 {
-	std::vector<Common::Location> locs;
+	std::vector<std::pair<int, int>> locs;
 	return locs;
 }

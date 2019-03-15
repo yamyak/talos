@@ -11,8 +11,8 @@ King::~King()
 {
 }
 
-std::vector<Common::Location> King::GetAvailableMoves()
+std::vector<std::pair<int, int>> King::GetAvailableMoves()
 {
-	std::vector<Common::Location> locs;
+	std::vector<std::pair<int, int>> locs;
 	return locs;
 }

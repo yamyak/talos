@@ -18,7 +18,8 @@ void Game::RegisterPlayers(Player & p1, Player & p2)
 	p2.SetColor(Common::Color::BLACK);
 }
 
-// 
+// check if next player's king is in check mate
+// update the winner flag if it is
 bool Game::CheckGameStatus(Common::Color & currentColor)
 {
 	bool status = true;
@@ -80,25 +81,25 @@ void Game::TransposeLocations(std::vector<Common::PieceInfo> & whiteLocs, std::v
 {
 	for (Common::PieceInfo & info : whiteLocs)
 	{
-		info.loc.x = Common::BOARD_LENGTH - info.loc.x;
-		info.loc.y = Common::BOARD_LENGTH - info.loc.y;
+		info.x = Common::BOARD_LENGTH - info.x;
+		info.y = Common::BOARD_LENGTH - info.y;
 	}
 
 	for (Common::PieceInfo & info : blackLocs)
 	{
-		info.loc.x = Common::BOARD_LENGTH - info.loc.x;
-		info.loc.y = Common::BOARD_LENGTH - info.loc.y;
+		info.x = Common::BOARD_LENGTH - info.x;
+		info.y = Common::BOARD_LENGTH - info.y;
 	}
 }
 
 // transpose x, y coordinates in move request
 void Game::TransposeMoveRequest(Common::MoveRequest & move)
 {
-	move.oldLoc.x = Common::BOARD_LENGTH - move.oldLoc.x;
-	move.oldLoc.y = Common::BOARD_LENGTH - move.oldLoc.y;
+	move.xOld = Common::BOARD_LENGTH - move.xOld;
+	move.yOld = Common::BOARD_LENGTH - move.yOld;
 
-	move.newLoc.x = Common::BOARD_LENGTH - move.newLoc.x;
-	move.newLoc.y = Common::BOARD_LENGTH - move.newLoc.y;
+	move.xNew = Common::BOARD_LENGTH - move.xNew;
+	move.yNew = Common::BOARD_LENGTH - move.yNew;
 }
 
 // verify if the move provided is a valid move
@@ -107,41 +108,44 @@ bool Game::CheckMoveRequest(Common::MoveRequest & move, Common::Color color)
 	bool valid = true;
 
 	// check if location coordinates are on the board
-	valid = Common::CheckIfOnBoard(move.newLoc.x, move.newLoc.y) && Common::CheckIfOnBoard(move.oldLoc.x, move.oldLoc.y);
+	valid = Common::CheckIfOnBoard(move.xNew, move.yNew) && Common::CheckIfOnBoard(move.xOld, move.yOld);
 
 	// check that piece is actually moving and not sitting in 1 place
-	valid = valid && (move.newLoc.x != move.oldLoc.x || move.newLoc.y != move.oldLoc.y);
+	valid = valid && (move.xNew != move.xOld || move.yNew != move.yOld);
 
 	// check that there is a piece at the starting location
-	Piece * moving = valid ? m_board.GetPiece(move.oldLoc) : nullptr;
+	Piece * moving = valid ? m_board.GetPiece(move.xOld, move.yOld) : nullptr;
 
 	// check that correct piece is at the starting location
 	valid = valid && moving != nullptr && moving->GetColor() == color && moving->GetType() == move.type;
 
 	// if a piece is at the destination, check that it is an enemy piece
-	Piece * target = valid ? m_board.GetPiece(move.newLoc) : nullptr;
+	Piece * target = valid ? m_board.GetPiece(move.xNew, move.yNew) : nullptr;
 	if (target != nullptr)
 	{
 		valid = valid && target->GetColor() != color;
 	}
 
 	// check that move is valid for piece
-	valid = valid && CheckMovePath(moving, move.newLoc);
+	valid = valid && CheckMovePath(moving, move.xNew, move.yNew);
 	// check that move path is clear of other pieces
-	valid = valid && CheckPathForObstacles(moving, move.newLoc);
+	valid = valid && CheckPathForObstacles(moving, move.xNew, move.yNew);
 	//
 	valid = valid && CheckIfKingInCheck(color);
 
 	return valid;
 }
 
-bool Game::CheckStraightPathForAggressors(Common::Location start, int xStep, int yStep, Common::Color color, std::set<Common::PieceType> types)
+// check if any of the provided piece types are on the path defined
+bool Game::CheckStraightPathForAggressors(int x, int y, int xStep, int yStep, Common::Color color, std::set<Common::PieceType> types)
 {
 	bool valid = true;
 
-	int xStart = start.x + xStep;
-	int yStart = start.y + yStep;
+	int xStart = x + xStep;
+	int yStart = y + yStep;
 
+	// iterate through path using the single step defined
+	// check to see if any of the piece types provided are on the path
 	while (Common::CheckIfOnBoard(xStart, yStart))
 	{
 		Piece * p = m_board.GetPiece(xStart, yStart);
@@ -152,6 +156,8 @@ bool Game::CheckStraightPathForAggressors(Common::Location start, int xStep, int
 				valid = false;
 			}
 
+			// if any piece found, stop searching
+			// no more line of sight to starting point
 			break;
 		}
 
@@ -168,16 +174,18 @@ bool Game::CheckIfKingInCheck(Common::Color color)
 	bool valid = true;
 
 	// get location of king
-	Common::Location kingLoc = m_board.GetKingLocation(color);
+	std::pair<int, int> kingLoc = m_board.GetKingLocation(color);
 	std::set<Common::PieceType> lethalTypes;
 	
 	// check if king is under attack from pawn
-	std::vector<int> locs = { kingLoc.x - 1, kingLoc.x + 1 };
+	// check 2 1-step forward diagonal to see if pawn there
+	std::vector<int> locs = { kingLoc.first - 1, kingLoc.second + 1 };
 	for (int x : locs)
 	{
-		if (valid && Common::CheckIfOnBoard(x, kingLoc.y))
+		// WRONG BECAUSE THE Y COORDINATE NEEDS TO BE KINGLOC + 1
+		if (valid && Common::CheckIfOnBoard(x, kingLoc.second))
 		{
-			Piece * p = m_board.GetPiece(x, kingLoc.y);
+			Piece * p = m_board.GetPiece(x, kingLoc.second);
 			if (p != nullptr)
 			{
 				if (p->GetColor() != color && p->GetType() == Common::PieceType::PAWN)
@@ -188,11 +196,13 @@ bool Game::CheckIfKingInCheck(Common::Color color)
 		}
 	}
 
+	// check if king under attack from knight
+	// iterate through all possible knight attack locations and see if knight there
 	std::map<int, int>::const_iterator it = Common::KNIGHT_MOVES.begin();
 	while (valid && it != Common::KNIGHT_MOVES.end())
 	{
-		int xLoc = kingLoc.x + it->first;
-		int yLoc = kingLoc.y + it->second;
+		int xLoc = kingLoc.first + it->first;
+		int yLoc = kingLoc.second + it->second;
 
 		if (Common::CheckIfOnBoard(xLoc, yLoc))
 		{
@@ -207,26 +217,28 @@ bool Game::CheckIfKingInCheck(Common::Color color)
 		}
 	}
 	
+	// check to see if 4 diagonals are clear of bishops and queens
 	lethalTypes.insert(Common::PieceType::BISHOP);
 	lethalTypes.insert(Common::PieceType::QUEEN);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, 1, 1, color, lethalTypes);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, -1, 1, color, lethalTypes);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, 1, -1, color, lethalTypes);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, -1, -1, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, 1, 1, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, -1, 1, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, 1, -1, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, -1, -1, color, lethalTypes);
 
+	// check to see if 4 straight lanes are clear of rooks and queens
 	lethalTypes.clear();
 	lethalTypes.insert(Common::PieceType::ROOK);
 	lethalTypes.insert(Common::PieceType::QUEEN);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, 1, 0, color, lethalTypes);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, -1, 0, color, lethalTypes);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, 0, -1, color, lethalTypes);
-	valid = valid && CheckStraightPathForAggressors(kingLoc, 0, -1, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, 1, 0, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, -1, 0, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, 0, -1, color, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(kingLoc.first, kingLoc.second, 0, -1, color, lethalTypes);
 
 	return valid;
 }
 
 // check that path from start location to destination is clear of any pieces
-bool Game::CheckPathForObstacles(Piece * piece, Common::Location target)
+bool Game::CheckPathForObstacles(Piece * piece, int x, int y)
 {
 	bool valid = true;
 
@@ -234,26 +246,26 @@ bool Game::CheckPathForObstacles(Piece * piece, Common::Location target)
 	{
 	case Common::PieceType::PAWN:
 		// NEED TO REDO THIS PART
-		if (target.y - piece->GetLocation().y > 1)
+		if (y - piece->GetLocation().second > 1)
 		{
-			valid = m_board.GetPiece(target.x, target.y - 1) == nullptr;
+			valid = m_board.GetPiece(x, y - 1) == nullptr;
 		}
 		break;
 	case Common::PieceType::BISHOP:
 	case Common::PieceType::ROOK:
 	case Common::PieceType::QUEEN:
 		// reduce x, y delta to most basic step
-		int xStart = piece->GetLocation().x;
-		int yStart = piece->GetLocation().y;
-		int xDelta = target.x - xStart;
-		int yDelta = target.y - yStart;
+		int xStart = piece->GetLocation().first;
+		int yStart = piece->GetLocation().second;
+		int xDelta = x - xStart;
+		int yDelta = y - yStart;
 		xDelta = xDelta / std::abs(xDelta);
 		yDelta = yDelta / std::abs(yDelta);
-		// step forward from start to destination
+		// iterate forward from start to destination in steps
 		// make sure no pieces are in that location
 		xStart += xDelta;
 		yStart += yDelta;
-		while (xStart != target.x && yStart != target.y)
+		while (xStart != x && yStart != y)
 		{
 			valid = m_board.GetPiece(xStart, yStart) == nullptr;
 			if (!valid)
@@ -272,13 +284,13 @@ bool Game::CheckPathForObstacles(Piece * piece, Common::Location target)
 }
 
 // validate that move is a valid move for the piece moving
-bool Game::CheckMovePath(Piece * piece, Common::Location target)
+bool Game::CheckMovePath(Piece * piece, int x, int y)
 {
 	bool valid = false;
 
 	// get the x, y changes
-	int xDelta = target.x - piece->GetLocation().x;
-	int yDelta = target.y - piece->GetLocation().y;
+	int xDelta = x - piece->GetLocation().first;
+	int yDelta = y - piece->GetLocation().second;
 
 	// get the absolute x, y changes
 	int xDeltaAbs = std::abs(xDelta);
@@ -300,7 +312,7 @@ bool Game::CheckMovePath(Piece * piece, Common::Location target)
 		else if(xDeltaAbs == 1 && yDelta == 1)
 		{
 			// if moving diagonal 1 step, check that enemy piece exists at destination
-			Piece * p = m_board.GetPiece(target);
+			Piece * p = m_board.GetPiece(x, y);
 			valid = p != nullptr && p->GetColor() != piece->GetColor();
 		}
 		// update first move flag

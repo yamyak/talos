@@ -11,8 +11,8 @@ Bishop::~Bishop()
 {
 }
 
-std::vector<Common::Location> Bishop::GetAvailableMoves()
+std::vector<std::pair<int, int>> Bishop::GetAvailableMoves()
 {
-	std::vector<Common::Location> locs;
+	std::vector<std::pair<int, int>> locs;
 	return locs;
 }

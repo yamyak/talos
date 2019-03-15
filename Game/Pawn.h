@@ -8,7 +8,7 @@ public:
 	Pawn(int x, int y, Common::Color color);
 	~Pawn();
 
-	std::vector<Common::Location> GetAvailableMoves();
+	std::vector<std::pair<int, int>> GetAvailableMoves();
 	bool & GetFirstMove();
 
 private:

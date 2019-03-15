@@ -8,6 +8,6 @@ public:
 	Knight(int x, int y, Common::Color color);
 	~Knight();
 
-	std::vector<Common::Location> GetAvailableMoves();
+	std::vector<std::pair<int, int>> GetAvailableMoves();
 };
 

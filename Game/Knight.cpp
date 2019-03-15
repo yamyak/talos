@@ -11,8 +11,8 @@ Knight::~Knight()
 {
 }
 
-std::vector<Common::Location> Knight::GetAvailableMoves()
+std::vector<std::pair<int, int>> Knight::GetAvailableMoves()
 {
-	std::vector<Common::Location> locs;
+	std::vector<std::pair<int, int>> locs;
 	return locs;
 }

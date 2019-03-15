@@ -3,10 +3,8 @@
 
 Piece::Piece(int x, int y, Common::Color color, Board * board)
 {
-	Common::Location loc;
-	loc.x = x;
-	loc.y = y;
-	m_location = loc;
+	m_x = x;
+	m_y = y;
 
 	m_color = color;
 	m_alive = true;
@@ -19,9 +17,10 @@ Piece::~Piece()
 {
 }
 
-Common::Location Piece::GetLocation()
+std::pair<int, int> Piece::GetLocation()
 {
-	return m_location;
+	std::pair<int, int> loc(m_x, m_y);
+	return loc;
 }
 
 Common::Color Piece::GetColor()

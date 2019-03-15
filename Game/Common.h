@@ -7,12 +7,6 @@ namespace Common
 	// size of the side of a board
 	const int BOARD_LENGTH = 8;
 
-	struct Location
-	{
-		int x;
-		int y;
-	};
-
 	enum PieceType
 	{
 		PAWN,
@@ -33,7 +27,8 @@ namespace Common
 	// contains the x, y coordinates of a piece
 	struct PieceInfo
 	{
-		Location loc;
+		int x;
+		int y;
 		PieceType type;
 	};
 
@@ -42,8 +37,10 @@ namespace Common
 	struct MoveRequest
 	{
 		PieceType type;
-		Location oldLoc;
-		Location newLoc;
+		int xOld;
+		int yOld;
+		int xNew;
+		int yNew;
 	};
 
 	// map holding all possible movements that a knight can make
