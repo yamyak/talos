@@ -18,6 +18,7 @@ public:
 	void GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vector<Common::PieceInfo> & black);
 	void ApplyMove(Common::MoveRequest & move);
 	Piece * GetPiece(int x, int y);
+	void SetMode(Common::Color color);
 
 private:
 	Common::Color m_mode;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <set>
 #include "Board.h"
+#include "Validator.h"
 #include "Player.h"
 
 class Game
@@ -16,16 +16,12 @@ public:
 
 private:
 	Board m_board;
+	Validator m_validator;
 
 	// flag to show the color of the winner
 	Common::Color m_winner;
 
-	void TransposeLocations(std::vector<Common::PieceInfo> & whiteLocs, std::vector<Common::PieceInfo> & blackLocs);
 	void TransposeMoveRequest(Common::MoveRequest & move);
-	bool CheckMoveRequest(Common::MoveRequest & move, Common::Color color);
-	bool CheckMovePath(Piece * piece, int x, int y);
-	bool CheckStraightPathForAggressors(int x, int y, int xStep, int yStep, Common::Color color, std::set<Common::PieceType> types);
-	bool CheckPathForObstacles(Piece * piece, int x, int y);
 	bool CheckIfKingInCheck(Common::Color color);
 };
 

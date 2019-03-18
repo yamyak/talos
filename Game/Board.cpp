@@ -77,7 +77,7 @@ Board::~Board()
 
 int Board::Transpose(int val)
 {
-	return Common::BOARD_LENGTH - 1 - val;
+	return (m_mode == Common::Color::WHITE) ? val : (Common::BOARD_LENGTH - 1 - val);
 }
 
 // adds the pointer to the piece to both the player list and the piece matrix
@@ -115,8 +115,8 @@ std::pair<int, int> Board::GetKingLocation(Common::Color color)
 		}
 	}
 
-	loc.first = (m_mode == Common::Color::WHITE) ? loc.first : Transpose(loc.first);
-	loc.second = (m_mode == Common::Color::WHITE) ? loc.second : Transpose(loc.second);
+	loc.first = Transpose(loc.first);
+	loc.second = Transpose(loc.second);
 
 	return loc;
 }
@@ -129,8 +129,8 @@ void Board::GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vecto
 		Common::PieceInfo info;
 		info.type = p->GetType();
 		std::pair<int, int> loc = p->GetLocation();
-		info.x = (m_mode == Common::Color::WHITE) ? loc.first : Transpose(loc.first);
-		info.y = (m_mode == Common::Color::WHITE) ? loc.second : Transpose(loc.second);
+		info.x = Transpose(loc.first);
+		info.y = Transpose(loc.second);
 
 		white.push_back(info);
 	}
@@ -140,20 +140,25 @@ void Board::GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vecto
 		Common::PieceInfo info;
 		info.type = p->GetType();
 		std::pair<int, int> loc = p->GetLocation();
-		info.x = (m_mode == Common::Color::WHITE) ? loc.first : Transpose(loc.first);
-		info.y = (m_mode == Common::Color::WHITE) ? loc.second : Transpose(loc.second);
+		info.x = Transpose(loc.first);
+		info.y = Transpose(loc.second);
 
 		black.push_back(info);
 	}
 }
 
+void Board::SetMode(Common::Color color)
+{
+	m_mode = color;
+}
+
 // applys the move specified
 void Board::ApplyMove(Common::MoveRequest & move)
 {
-	int xOld = (m_mode == Common::Color::WHITE) ? move.xOld : Transpose(move.xOld);
-	int yOld = (m_mode == Common::Color::WHITE) ? move.yOld : Transpose(move.yOld);
-	int xNew = (m_mode == Common::Color::WHITE) ? move.xNew : Transpose(move.xNew);
-	int yNew = (m_mode == Common::Color::WHITE) ? move.yNew : Transpose(move.yNew);
+	int xOld = Transpose(move.xOld);
+	int yOld = Transpose(move.yOld);
+	int xNew = Transpose(move.xNew);
+	int yNew = Transpose(move.yNew);
 
 	// retrieve the piece to be moved
 	Piece * p = m_matrix[xOld][yOld];
@@ -199,7 +204,7 @@ void Board::ApplyMove(Common::MoveRequest & move)
 // get the piece at the specified x, y coordinates
 Piece * Board::GetPiece(int x, int y)
 {
-	int xVal = (m_mode == Common::Color::WHITE) ? x : Transpose(x);
-	int yVal = (m_mode == Common::Color::WHITE) ? y : Transpose(y);
+	int xVal = Transpose(x);
+	int yVal = Transpose(y);
 	return m_matrix[xVal][yVal];
 }
