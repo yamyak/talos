@@ -20,7 +20,7 @@ Common::Color Player::GetColor()
 	return m_color;
 }
 
-Common::MoveRequest Player::MakeMove(std::vector<Common::PieceInfo> & mine, std::vector<Common::PieceInfo> & theirs)
+Common::MoveRequest Player::MakeMove(Common::MiniBoard board)
 {
-	return m_alg->CalculateMove(mine, theirs);
+	return m_alg->CalculateMove(board);
 }

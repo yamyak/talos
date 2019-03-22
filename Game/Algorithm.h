@@ -9,6 +9,6 @@ public:
 	Algorithm();
 	~Algorithm();
 
-	Common::MoveRequest CalculateMove(std::vector<Common::PieceInfo> & mine, std::vector<Common::PieceInfo> & theirs);
+	Common::MoveRequest CalculateMove(Common::MiniBoard & board);
 };
 

@@ -23,13 +23,34 @@ namespace Common
 		BLACK
 	};
 
-	// structure provided to player object from the board
-	// contains the x, y coordinates of a piece
+	// structure that hold piece info
 	struct PieceInfo
 	{
-		int x;
-		int y;
 		PieceType type;
+		Color color;
+
+		PieceInfo(PieceType t, Color c) : type(t), color(c) {}
+		PieceInfo(PieceInfo * p) : type(p->type), color(p->color) {}
+	};
+
+	struct MiniBoard
+	{
+		PieceInfo * data[BOARD_LENGTH][BOARD_LENGTH];
+
+		MiniBoard() {}
+		MiniBoard(MiniBoard * b)
+		{
+			for (int i = 0; i < BOARD_LENGTH; i++)
+			{
+				for (int j = 0; j < BOARD_LENGTH; j++)
+				{
+					if (b->data[i][j] != nullptr)
+					{
+						data[i][j] = new Common::PieceInfo(b->data[i][j]);
+					}
+				}
+			}
+		}
 	};
 
 	// structure provided to board from the player
@@ -42,10 +63,6 @@ namespace Common
 		int xNew;
 		int yNew;
 	};
-
-	// map holding all possible movements that a knight can make
-	// THIS DOES NOT WORK LIKE THIS
-	const std::map<int, int> KNIGHT_MOVES = { {1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1} };
 
 	// function to check if provided x,y coordinates are located within board limits
 	inline bool CheckIfOnBoard(int x, int y) { return x >= 0 && x < BOARD_LENGTH && y >= 0 && y < BOARD_LENGTH; };

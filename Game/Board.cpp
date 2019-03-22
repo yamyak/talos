@@ -4,71 +4,44 @@
 
 Board::Board()
 {
-	m_mode = Common::Color::WHITE;
-
-	// resizes the piece matrix to the correct sizes
-	m_matrix.resize(Common::BOARD_LENGTH);
-	for (std::vector<Piece *> & v : m_matrix)
-	{
-		v.resize(Common::BOARD_LENGTH);
-	}
-
 	// the board is set up so that it faces in the direction of the white pieces
+	m_mode = Common::Color::WHITE;
 
 	// add the pawns to the board
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
-		Pawn * p = new Pawn(i, 1, Common::Color::WHITE);
-		AddPiece(p, true);
-
-		p = new Pawn(i, 6, Common::Color::BLACK);
-		AddPiece(p, false);
+		m_matrix[i][1] = new Common::PieceInfo(Common::PieceType::PAWN, Common::Color::WHITE);
+		m_matrix[i][6] = new Common::PieceInfo(Common::PieceType::PAWN, Common::Color::BLACK);
 	}
 
 	// add the rooks to the board
-	Rook * r = new Rook(0, 0, Common::Color::WHITE);
-	AddPiece(r, true);
-	r = new Rook(7, 0, Common::Color::WHITE);
-	AddPiece(r, true);
+	m_matrix[0][0] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::WHITE);
+	m_matrix[7][0] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::WHITE);
 
-	r = new Rook(0, 7, Common::Color::BLACK);
-	AddPiece(r, false);
-	r = new Rook(7, 7, Common::Color::BLACK);
-	AddPiece(r, false);
+	m_matrix[0][7] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::BLACK);
+	m_matrix[7][7] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::BLACK);
 
 	// add the knights to the board
-	Knight * n = new Knight(1, 0, Common::Color::WHITE);
-	AddPiece(n, true);
-	n = new Knight(6, 0, Common::Color::WHITE);
-	AddPiece(n, true);
+	m_matrix[1][0] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::WHITE);
+	m_matrix[6][0] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::WHITE);
 
-	n = new Knight(1, 7, Common::Color::BLACK);
-	AddPiece(n, false);
-	n = new Knight(6, 7, Common::Color::BLACK);
-	AddPiece(n, false);
+	m_matrix[1][7] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::BLACK);
+	m_matrix[6][7] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::BLACK);
 
 	// add the bishops to the board
-	Bishop * b = new Bishop(2, 0, Common::Color::WHITE);
-	AddPiece(b, true);
-	b = new Bishop(5, 0, Common::Color::WHITE);
-	AddPiece(b, true);
+	m_matrix[2][0] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::WHITE);
+	m_matrix[5][0] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::WHITE);
 
-	b = new Bishop(2, 7, Common::Color::BLACK);
-	AddPiece(b, false);
-	b = new Bishop(5, 7, Common::Color::BLACK);
-	AddPiece(b, false);
+	m_matrix[2][7] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::BLACK);
+	m_matrix[5][7] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::BLACK);
 
 	// add the queens to the board
-	Queen * q = new Queen(3, 0, Common::Color::WHITE);
-	AddPiece(q, true);
-	q = new Queen(4, 7, Common::Color::BLACK);
-	AddPiece(q, false);
+	m_matrix[3][0] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::WHITE);
+	m_matrix[4][7] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::BLACK);
 
 	// add the kings to the board
-	King * k = new King(4, 0, Common::Color::WHITE);
-	AddPiece(k, true);
-	k = new King(3, 7, Common::Color::BLACK);
-	AddPiece(k, false);
+	m_matrix[4][0] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::WHITE);
+	m_matrix[3][7] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::BLACK);
 }
 
 Board::~Board()
@@ -80,71 +53,24 @@ int Board::Transpose(int val)
 	return (m_mode == Common::Color::WHITE) ? val : (Common::BOARD_LENGTH - 1 - val);
 }
 
-// adds the pointer to the piece to both the player list and the piece matrix
-void Board::AddPiece(Piece * piece, bool white)
+Common::MiniBoard Board::GetBoard()
 {
-	if (white)
+	Common::MiniBoard mini;
+
+	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
-		m_whitePieces.push_back(piece);
-	}
-	else
-	{
-		m_blackPieces.push_back(piece);
-	}
-
-	std::pair<int, int> loc = piece->GetLocation();
-	m_matrix[loc.first][loc.second] = piece;
-}
-
-// returns the x, y coordinates to the king piece for the specified color
-std::pair<int, int> Board::GetKingLocation(Common::Color color)
-{
-	std::vector<Piece *> * pieces;
-
-	pieces = (color == Common::Color::WHITE) ? &m_whitePieces : &m_blackPieces;
-
-	std::pair<int, int> loc;
-
-	// iterates through all the pieces for the specified color
-	// trying to find the king piece
-	for (Piece * p : *pieces)
-	{
-		if (p->GetType() == Common::PieceType::KING)
+		for (int j = 0; j < Common::BOARD_LENGTH; j++)
 		{
-			loc = p->GetLocation();
+			if (m_matrix[i][j] != nullptr)
+			{
+				int iTrans = Transpose(i);
+				int jTrans = Transpose(j);
+				mini.data[iTrans][jTrans] = new Common::PieceInfo(m_matrix[i][j]);
+			}
 		}
 	}
 
-	loc.first = Transpose(loc.first);
-	loc.second = Transpose(loc.second);
-
-	return loc;
-}
-
-// populates 2 lists of piece x, y coordinates, one for black and one for white
-void Board::GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vector<Common::PieceInfo> & black)
-{
-	for (Piece * p : m_whitePieces)
-	{
-		Common::PieceInfo info;
-		info.type = p->GetType();
-		std::pair<int, int> loc = p->GetLocation();
-		info.x = Transpose(loc.first);
-		info.y = Transpose(loc.second);
-
-		white.push_back(info);
-	}
-
-	for (Piece * p : m_blackPieces)
-	{
-		Common::PieceInfo info;
-		info.type = p->GetType();
-		std::pair<int, int> loc = p->GetLocation();
-		info.x = Transpose(loc.first);
-		info.y = Transpose(loc.second);
-
-		black.push_back(info);
-	}
+	return mini;
 }
 
 void Board::SetMode(Common::Color color)
@@ -152,8 +78,8 @@ void Board::SetMode(Common::Color color)
 	m_mode = color;
 }
 
-// applys the move specified
-void Board::ApplyMove(Common::MoveRequest & move)
+// applys the move specified to board specified
+void Board::ApplyMove(Common::MoveRequest & move, Common::PieceInfo * board[][Common::BOARD_LENGTH])
 {
 	int xOld = Transpose(move.xOld);
 	int yOld = Transpose(move.yOld);
@@ -161,50 +87,25 @@ void Board::ApplyMove(Common::MoveRequest & move)
 	int yNew = Transpose(move.yNew);
 
 	// retrieve the piece to be moved
-	Piece * p = m_matrix[xOld][yOld];
+	Common::PieceInfo * p = board[xOld][yOld];
 	// clear out the old piece location
-	m_matrix[xOld][yOld] = nullptr;
+	board[xOld][yOld] = nullptr;
 
 	// check if new location is not empty
-	if (m_matrix[xNew][yNew] != nullptr)
+	if (board[xNew][yNew] != nullptr)
 	{
 		// retrieve the piece that will be killed and delete it
-		Piece * dead = m_matrix[xNew][yNew];
+		Common::PieceInfo * dead = board[xNew][yNew];
 		delete dead;
 		dead = nullptr;
-
-		// iterate through both arrays to remove the null pointer from the deleted piece
-		// COULD POTENTIALLY DO THIS BASED ON MOVING PIECE COLOR
-		std::vector<Piece *>::iterator pIter = m_blackPieces.begin();
-		while(pIter != m_blackPieces.end())
-		{
-			if (*pIter == nullptr)
-			{
-				m_blackPieces.erase(pIter);
-				break;
-			}
-		}
-
-		pIter = m_whitePieces.begin();
-		while (pIter != m_whitePieces.end())
-		{
-			if (*pIter == nullptr)
-			{
-				m_whitePieces.erase(pIter);
-				break;
-			}
-		}
 	}
 
-	// move piece to new location and update its internal coordinates
-	m_matrix[xNew][yNew] = p;
-	p->SetLocation(xNew, yNew);
+	// move piece to new location
+	board[xNew][yNew] = p;
 }
 
-// get the piece at the specified x, y coordinates
-Piece * Board::GetPiece(int x, int y)
+// applys the move specified
+void Board::ApplyMove(Common::MoveRequest & move)
 {
-	int xVal = Transpose(x);
-	int yVal = Transpose(y);
-	return m_matrix[xVal][yVal];
+	ApplyMove(move, m_matrix);
 }

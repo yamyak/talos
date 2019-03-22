@@ -10,12 +10,13 @@ public:
 	Validator();
 	~Validator();
 
-	bool CheckMoveRequest(Common::MoveRequest & move, Common::Color color, Board & board);
-	bool CheckStraightPathForAggressors(Board & board, int x, int y, int xStep, int yStep, Common::Color color, std::set<Common::PieceType> types);
+	bool CheckMoveRequest(Common::MoveRequest & move, Common::Color color, Common::MiniBoard & board);
+	bool CheckStraightPathForAggressors(std::pair<int, int> kingLoc, Common::Color color, Common::MiniBoard & board, int xStep, int yStep,  std::set<Common::PieceType> types);
+	bool CheckPawnAggressors(std::pair<int, int> kingLoc, Common::Color color, Common::MiniBoard & board);
+	bool CheckKnightAggressors(std::pair<int, int> kingLoc, Common::Color color, Common::MiniBoard & board);
 
 private:
-	bool CheckMovePath(Piece * piece, int x, int y, Board & board);
-	
-	bool CheckPathForObstacles(Piece * piece, int x, int y, Board & board);
+	bool CheckMovePath(Common::MoveRequest & move , Common::MiniBoard & board);
+	bool CheckPathForObstacles(Common::MoveRequest & move, Common::MiniBoard & board);
 };
 

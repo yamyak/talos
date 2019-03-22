@@ -1,12 +1,7 @@
 #pragma once
 
 #include <utility>
-#include "King.h"
-#include "Queen.h"
-#include "Rook.h"
-#include "Bishop.h"
-#include "Knight.h"
-#include "Pawn.h"
+#include "Common.h"
 
 class Board
 {
@@ -14,25 +9,17 @@ public:
 	Board();
 	~Board();
 
-	std::pair<int, int> GetKingLocation(Common::Color color);
-	void GetPieceLocations(std::vector<Common::PieceInfo> & white, std::vector<Common::PieceInfo> & black);
+	Common::MiniBoard GetBoard();
 	void ApplyMove(Common::MoveRequest & move);
-	Piece * GetPiece(int x, int y);
+	void ApplyMove(Common::MoveRequest & move, Common::PieceInfo * board[][Common::BOARD_LENGTH]);
 	void SetMode(Common::Color color);
 
 private:
 	Common::Color m_mode;
-	// structures that hold the pieces split into opposing sides
-	// makes it easier to provide players with their corresponding pieces
-	std::vector<Piece *> m_blackPieces;
-	std::vector<Piece *> m_whitePieces;
+
 	// structure that holds the pieces as they are situated on the board
 	// makes it easier to make moves and check for special cases
-	std::vector<std::vector<Piece *>> m_matrix;
-
-	// initialization function used when setting up the board
-	// DON'T NEED TO SEND IN THE COLOR ANYMORE
-	void AddPiece(Piece * piece, bool white);
+	Common::PieceInfo * m_matrix[Common::BOARD_LENGTH][Common::BOARD_LENGTH];
 
 	int Transpose(int val);
 };

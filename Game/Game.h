@@ -11,8 +11,8 @@ public:
 	~Game();
 
 	void RegisterPlayers(Player & p1, Player & p2);
-	bool CheckGameStatus(Common::Color & currentColor);
-	void QueryPlayerForMove(Player & p, Common::Color color);
+	bool CheckGameStatus(Common::Color color);
+	void QueryPlayerForMove(Player & p);
 
 private:
 	Board m_board;
@@ -21,7 +21,7 @@ private:
 	// flag to show the color of the winner
 	Common::Color m_winner;
 
-	void TransposeMoveRequest(Common::MoveRequest & move);
-	bool CheckIfKingInCheck(Common::Color color);
+	bool CheckIfKingInCheck(Common::Color color, Common::MiniBoard & board);
+	std::pair<int, int> GetKingLocation(Common::Color color, Common::MiniBoard & board);
 };
 

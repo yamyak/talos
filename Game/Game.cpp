@@ -20,15 +20,52 @@ void Game::RegisterPlayers(Player & p1, Player & p2)
 
 // check if next player's king is in check mate
 // update the winner flag if it is
-bool Game::CheckGameStatus(Common::Color & currentColor)
+bool Game::CheckGameStatus(Common::Color color)
 {
 	bool status = true;
 
-	Common::Color nextColor  = (currentColor == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
+	m_board.SetMode(color);
 
-	if (!CheckIfKingInCheck(nextColor))
+	// retrieve all the piece locations
+	Common::MiniBoard mini = m_board.GetBoard();
+
+	if (!CheckIfKingInCheck(color, mini))
 	{
+		status = false;
 
+		// iterate through all same color pieces on the board
+		for (int i = 0; i < Common::BOARD_LENGTH; i++)
+		{
+			for (int j = 0; j < Common::BOARD_LENGTH; j++)
+			{
+				Common::PieceInfo * p = mini.data[i][j];
+				if (p != nullptr && p->color == color)
+				{
+					// find all possible moves for each piece
+					std::vector<Common::MoveRequest> moves;
+
+					for (Common::MoveRequest & move : moves)
+					{
+						Common::MiniBoard & testBoard(mini);
+						// apply each move to test board and check for check again
+						m_board.ApplyMove(move, testBoard.data);
+
+						// if way out found, return true
+						if (CheckIfKingInCheck(color, testBoard))
+						{
+							return true;
+						}
+					}
+				}
+			}
+		}
+		
+		// if no way out found, set the winner and return false
+		if (!status)
+		{
+			m_winner = color == Common::Color::WHITE ? Common::Color::BLACK : Common::Color::WHITE;
+		}
+		
 	}
 
 	return status;
@@ -37,121 +74,88 @@ bool Game::CheckGameStatus(Common::Color & currentColor)
 // request a move from the player
 // check that the move is valid
 // apply the move to the board
-void Game::QueryPlayerForMove(Player & p, Common::Color color)
+void Game::QueryPlayerForMove(Player & p)
 {
-	std::vector<Common::PieceInfo> whiteInfo;
-	std::vector<Common::PieceInfo> blackInfo;
-
-	m_board.SetMode(color);
-
 	// retrieve all the piece locations
-	m_board.GetPieceLocations(whiteInfo, blackInfo);
+	Common::MiniBoard mini = m_board.GetBoard();
 
 	// query for move until valid move returned
 	bool validMove = false;
 	Common::MoveRequest move;
 	while (!validMove)
 	{
-		// switch piece list based on color
-		// friendly piece list first, enemy piece list second
-		if (p.GetColor() == Common::Color::WHITE)
-		{
-			move = p.MakeMove(whiteInfo, blackInfo);
-		}
-		else
-		{
-			move = p.MakeMove(blackInfo, whiteInfo);
-		}
+		move = p.MakeMove(mini);
 
 		// check if the move is a valid one
-		validMove = m_validator.CheckMoveRequest(move, color, m_board);
+		validMove = m_validator.CheckMoveRequest(move, p.GetColor(), mini);
 
-		// THIS NEEDS TO BE CHECKED AFTER THE MOVE IS APPLIED
-		// AND REVERTED IF IT RETURNS A BAD RESULT
-		validMove = validMove && CheckIfKingInCheck(color);
+		Common::MiniBoard testBoard(mini);
+		if (validMove)
+		{
+			m_board.ApplyMove(move, testBoard.data);
+		}
+		
+		validMove = validMove && CheckIfKingInCheck(p.GetColor(), mini);
 	}
 
 	// apply the move to the board
 	m_board.ApplyMove(move);
 }
 
-// transpose x, y coordinates in move request
-void Game::TransposeMoveRequest(Common::MoveRequest & move)
-{
-	move.xOld = Common::BOARD_LENGTH - move.xOld;
-	move.yOld = Common::BOARD_LENGTH - move.yOld;
-
-	move.xNew = Common::BOARD_LENGTH - move.xNew;
-	move.yNew = Common::BOARD_LENGTH - move.yNew;
-}
-
 // check if king is in check
-bool Game::CheckIfKingInCheck(Common::Color color)
+bool Game::CheckIfKingInCheck(Common::Color color, Common::MiniBoard & board)
 {
 	bool valid = true;
 
 	// get location of king
-	std::pair<int, int> kingLoc = m_board.GetKingLocation(color);
-	std::set<Common::PieceType> lethalTypes;
+	std::pair<int, int> kingLoc = GetKingLocation(color, board);
 	
-	// check if king is under attack from pawn
-	// check 2 1-step forward diagonal to see if pawn there
-	std::vector<int> locs = { kingLoc.first - 1, kingLoc.second + 1 };
-	for (int x : locs)
-	{
-		// WRONG BECAUSE THE Y COORDINATE NEEDS TO BE KINGLOC + 1
-		if (valid && Common::CheckIfOnBoard(x, kingLoc.second))
-		{
-			Piece * p = m_board.GetPiece(x, kingLoc.second);
-			if (p != nullptr)
-			{
-				if (p->GetColor() != color && p->GetType() == Common::PieceType::PAWN)
-				{
-					valid = false;
-				}
-			}
-		}
-	}
+	valid = m_validator.CheckPawnAggressors(kingLoc, color, board);
 
-	// check if king under attack from knight
-	// iterate through all possible knight attack locations and see if knight there
-	std::map<int, int>::const_iterator it = Common::KNIGHT_MOVES.begin();
-	while (valid && it != Common::KNIGHT_MOVES.end())
-	{
-		int xLoc = kingLoc.first + it->first;
-		int yLoc = kingLoc.second + it->second;
+	valid = valid && m_validator.CheckKnightAggressors(kingLoc, color, board);
 
-		if (Common::CheckIfOnBoard(xLoc, yLoc))
-		{
-			Piece * p = m_board.GetPiece(xLoc, yLoc);
-			if (p != nullptr)
-			{
-				if (p->GetColor() != color && p->GetType() == Common::PieceType::KNIGHT)
-				{
-					valid = false;
-				}
-			}
-		}
-	}
+	std::set<Common::PieceType> lethalTypes;
 	
 	// check to see if 4 diagonals are clear of bishops and queens
 	lethalTypes.insert(Common::PieceType::BISHOP);
 	lethalTypes.insert(Common::PieceType::QUEEN);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, 1, 1, color, lethalTypes);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, -1, 1, color, lethalTypes);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, 1, -1, color, lethalTypes);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, -1, -1, color, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, 1, 1, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, -1, 1, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, 1, -1, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, -1, -1, lethalTypes);
 
 	// check to see if 4 straight lanes are clear of rooks and queens
 	lethalTypes.clear();
 	lethalTypes.insert(Common::PieceType::ROOK);
 	lethalTypes.insert(Common::PieceType::QUEEN);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, 1, 0, color, lethalTypes);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, -1, 0, color, lethalTypes);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, 0, -1, color, lethalTypes);
-	valid = valid && m_validator.CheckStraightPathForAggressors(m_board, kingLoc.first, kingLoc.second, 0, -1, color, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, 1, 0, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, -1, 0, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, 0, 1, lethalTypes);
+	valid = valid && m_validator.CheckStraightPathForAggressors(kingLoc, color, board, 0, -1, lethalTypes);
 
 	return valid;
+}
+
+// returns the x, y coordinates to the king piece for the specified color
+std::pair<int, int> Game::GetKingLocation(Common::Color color, Common::MiniBoard & board)
+{
+	std::pair<int, int> loc;
+
+	for (int i = 0; i < Common::BOARD_LENGTH; i++)
+	{
+		for (int j = 0; j < Common::BOARD_LENGTH; j++)
+		{
+			Common::PieceInfo * ptr = board.data[i][j];
+
+			if (ptr != nullptr && ptr->color == color && ptr->type == Common::PieceType::KING)
+			{
+				loc.first = i;
+				loc.second = j;
+			}
+		}
+	}
+
+	return loc;
 }
 
 int main()
@@ -165,14 +169,14 @@ int main()
 	g.RegisterPlayers(p1, p2);
 
 	Player * currentPlayer = &p1;
-	Common::Color currentColor = Common::Color::WHITE;
-	while (g.CheckGameStatus(currentColor))
+	while (g.CheckGameStatus(currentPlayer->GetColor()))
 	{
-		g.QueryPlayerForMove(*currentPlayer, currentColor);
+		g.QueryPlayerForMove(*currentPlayer);
 		
 		currentPlayer = (currentPlayer == &p1) ? &p2 : &p1;
-		currentColor = (currentColor == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
 	}
+
+	// return the game winner
 
 	return 0;
 }

@@ -12,7 +12,7 @@ public:
 
 	void SetColor(Common::Color color);
 	Common::Color GetColor();
-	Common::MoveRequest MakeMove(std::vector<Common::PieceInfo> & mine, std::vector<Common::PieceInfo> & theirs);
+	Common::MoveRequest MakeMove(Common::MiniBoard board);
 
 private:
 	Common::Color m_color;

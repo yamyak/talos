@@ -9,7 +9,7 @@ Algorithm::~Algorithm()
 {
 }
 
-Common::MoveRequest Algorithm::CalculateMove(std::vector<Common::PieceInfo> & mine, std::vector<Common::PieceInfo> & theirs)
+Common::MoveRequest Algorithm::CalculateMove(Common::MiniBoard & board)
 {
 	Common::MoveRequest move;
 	move.xNew = 0;
