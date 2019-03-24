@@ -42,7 +42,7 @@ bool Game::CheckGameStatus(Common::Color color)
 				if (p != nullptr && p->color == color)
 				{
 					// find all possible moves for each piece
-					std::vector<Common::MoveRequest> moves;
+					std::vector<Common::MoveRequest> moves = FindPotentialMoves(mini, i, j);
 
 					for (Common::MoveRequest & move : moves)
 					{
@@ -156,6 +156,128 @@ std::pair<int, int> Game::GetKingLocation(Common::Color color, Common::MiniBoard
 	}
 
 	return loc;
+}
+
+std::vector<Common::MoveRequest> Game::FindStraightLineMoves(Common::MiniBoard & board, int x, int y,
+	const std::vector<std::pair<int, int>> & steps, Common::Color & color, Common::PieceType & type)
+{
+	std::vector<Common::MoveRequest> moves;
+
+	for (const std::pair<int, int> & step : steps)
+	{
+		bool go = true;
+
+		while (go)
+		{
+			int xLoc = x + step.first;
+			int yLoc = y + step.second;
+
+			if (Common::CheckIfOnBoard(xLoc, yLoc))
+			{
+				Common::PieceInfo * potential = board.data[xLoc][yLoc];
+
+				if (potential == nullptr || potential->color != color)
+				{
+					Common::MoveRequest req;
+					req.type = type;
+					req.xOld = x;
+					req.yOld = y;
+					req.xNew = xLoc;
+					req.yNew = yLoc;
+					moves.push_back(req);
+
+					if (potential != nullptr)
+					{
+						break;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	return moves;
+}
+
+std::vector<Common::MoveRequest> Game::FindSpotMoves(Common::MiniBoard & board, int x, int y,
+	const std::vector<std::pair<int, int>> & locs, Common::Color & color, Common::PieceType & type)
+{
+	std::vector<Common::MoveRequest> moves;
+
+	for (const std::pair<int, int> & loc : locs)
+	{
+		if (Common::CheckIfOnBoard(x + loc.first, y + loc.second))
+		{
+			Common::PieceInfo * potential = board.data[x + loc.first][y + loc.second];
+
+			if (potential == nullptr || potential->color != color)
+			{
+				Common::MoveRequest req;
+				req.type = type;
+				req.xOld = x;
+				req.yOld = y;
+				req.xNew = x + loc.first;
+				req.yNew = y + loc.second;
+				moves.push_back(req);
+			}
+		}
+	}
+	
+	return moves;
+}
+
+std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & board, int x, int y)
+{
+	std::vector<Common::MoveRequest> moves;
+
+	Common::PieceInfo * p = board.data[x][y];
+
+	switch (p->type)
+	{
+	case Common::PieceType::KING:
+	{
+		const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
+		moves = FindSpotMoves(board, x, y, locs, p->color, p->type);
+		break;
+	}
+	case Common::PieceType::QUEEN:
+	{
+		const std::vector<std::pair<int, int>> steps = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
+		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
+		break;
+	}
+	case Common::PieceType::PAWN:
+		break;
+	case Common::PieceType::ROOK:
+	{
+		const std::vector<std::pair<int, int>> steps = { {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
+		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
+		break;
+	}
+	case Common::PieceType::BISHOP:
+	{
+		const std::vector<std::pair<int, int>> steps = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
+		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
+		break;
+	}
+	case Common::PieceType::KNIGHT:
+	{
+		const std::vector<std::pair<int, int>> locs = { {1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1} };
+		moves = FindSpotMoves(board, x, y, locs, p->color, p->type);
+		break;
+	}
+	default:
+		break;
+	}
+
+	return moves;
 }
 
 int main()
