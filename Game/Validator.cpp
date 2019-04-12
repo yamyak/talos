@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Validator.h"
 
+#include <vector>
+
 Validator::Validator()
 {
 }
@@ -164,7 +166,7 @@ bool Validator::CheckMovePath(Common::MoveRequest & move, Common::MiniBoard & bo
 }
 
 // verify if the move provided is a valid move
-bool Validator::CheckMoveRequest(Common::MoveRequest & move, Common::Color color, Common::MiniBoard & board)
+bool Validator::CheckMoveRequest(Common::Color color, Common::MoveRequest & move, Common::MiniBoard & board)
 {
 	bool valid = true;
 

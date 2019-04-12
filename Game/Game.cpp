@@ -11,97 +11,6 @@ Game::~Game()
 {
 }
 
-// register each player with a color
-void Game::RegisterPlayers(Player & p1, Player & p2)
-{
-	p1.SetColor(Common::Color::WHITE);
-	p2.SetColor(Common::Color::BLACK);
-}
-
-// check if next player's king is in check mate
-// update the winner flag if it is
-bool Game::CheckGameStatus(Common::Color color)
-{
-	bool status = true;
-
-	m_board.SetMode(color);
-
-	// retrieve all the piece locations
-	Common::MiniBoard mini = m_board.GetBoard();
-
-	if (!CheckIfKingInCheck(color, mini))
-	{
-		status = false;
-
-		// iterate through all same color pieces on the board
-		for (int i = 0; i < Common::BOARD_LENGTH; i++)
-		{
-			for (int j = 0; j < Common::BOARD_LENGTH; j++)
-			{
-				Common::PieceInfo * p = mini.data[i][j];
-				if (p != nullptr && p->color == color)
-				{
-					// find all possible moves for each piece
-					std::vector<Common::MoveRequest> moves = FindPotentialMoves(mini, i, j);
-
-					for (Common::MoveRequest & move : moves)
-					{
-						Common::MiniBoard & testBoard(mini);
-						// apply each move to test board and check for check again
-						m_board.ApplyMove(move, testBoard.data);
-
-						// if way out found, return true
-						if (CheckIfKingInCheck(color, testBoard))
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
-		
-		// if no way out found, set the winner and return false
-		if (!status)
-		{
-			m_winner = color == Common::Color::WHITE ? Common::Color::BLACK : Common::Color::WHITE;
-		}
-		
-	}
-
-	return status;
-}
-
-// request a move from the player
-// check that the move is valid
-// apply the move to the board
-void Game::QueryPlayerForMove(Player & p)
-{
-	// retrieve all the piece locations
-	Common::MiniBoard mini = m_board.GetBoard();
-
-	// query for move until valid move returned
-	bool validMove = false;
-	Common::MoveRequest move;
-	while (!validMove)
-	{
-		move = p.MakeMove(mini);
-
-		// check if the move is a valid one
-		validMove = m_validator.CheckMoveRequest(move, p.GetColor(), mini);
-
-		Common::MiniBoard testBoard(mini);
-		if (validMove)
-		{
-			m_board.ApplyMove(move, testBoard.data);
-		}
-		
-		validMove = validMove && CheckIfKingInCheck(p.GetColor(), mini);
-	}
-
-	// apply the move to the board
-	m_board.ApplyMove(move);
-}
-
 // check if king is in check
 bool Game::CheckIfKingInCheck(Common::Color color, Common::MiniBoard & board)
 {
@@ -280,25 +189,131 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 	return moves;
 }
 
-int main()
+// applys the move specified to board specified
+void Game::ApplyMove(Common::MoveRequest & move, Common::MiniBoard & board)
 {
-	Game g;
-	Algorithm a1;
-	Player p1(&a1);
-	Algorithm a2;
-	Player p2(&a2);
+	// retrieve the piece to be moved
+	Common::PieceInfo * p = board.data[move.xOld][move.yOld];
+	// clear out the old piece location
+	board.data[move.xOld][move.yOld] = nullptr;
 
-	g.RegisterPlayers(p1, p2);
-
-	Player * currentPlayer = &p1;
-	while (g.CheckGameStatus(currentPlayer->GetColor()))
+	// check if new location is not empty
+	if (board.data[move.xNew][move.yNew] != nullptr)
 	{
-		g.QueryPlayerForMove(*currentPlayer);
-		
-		currentPlayer = (currentPlayer == &p1) ? &p2 : &p1;
+		// retrieve the piece that will be killed and delete it
+		Common::PieceInfo * dead = board.data[move.xNew][move.yNew];
+		delete dead;
+		dead = nullptr;
 	}
 
-	// return the game winner
+	// move piece to new location
+	board.data[move.xNew][move.yNew] = p;
+}
 
+bool Game::Initialize(Common::MiniBoard & board)
+{
+	// add the pawns to the board
+	for (int i = 0; i < Common::BOARD_LENGTH; i++)
+	{
+		board.data[i][1] = new Common::PieceInfo(Common::PieceType::PAWN, Common::Color::WHITE);
+		board.data[i][6] = new Common::PieceInfo(Common::PieceType::PAWN, Common::Color::BLACK);
+	}
+
+	// add the rooks to the board
+	board.data[0][0] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::WHITE);
+	board.data[7][0] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::WHITE);
+
+	board.data[0][7] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::BLACK);
+	board.data[7][7] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::BLACK);
+
+	// add the knights to the board
+	board.data[1][0] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::WHITE);
+	board.data[6][0] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::WHITE);
+
+	board.data[1][7] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::BLACK);
+	board.data[6][7] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::BLACK);
+
+	// add the bishops to the board
+	board.data[2][0] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::WHITE);
+	board.data[5][0] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::WHITE);
+
+	board.data[2][7] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::BLACK);
+	board.data[5][7] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::BLACK);
+
+	// add the queens to the board
+	board.data[3][0] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::WHITE);
+	board.data[4][7] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::BLACK);
+
+	// add the kings to the board
+	board.data[4][0] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::WHITE);
+	board.data[3][7] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::BLACK);
+
+	return true;
+}
+
+bool Game::AttemptMove(Common::Color & color, Common::MoveRequest & move, Common::MiniBoard & board)
+{
+	bool status = false;
+
+	// check if the move is a valid one
+	if (m_validator.CheckMoveRequest(color, move, board))
+	{
+		Common::MiniBoard testBoard(board);
+		ApplyMove(move, testBoard);
+
+		if (CheckIfKingInCheck(color, testBoard))
+		{
+			// apply the move to the board
+			ApplyMove(move, board);
+			status = true;
+		}
+	}
+
+	return status;
+}
+
+// check if next player's king is in check mate
+// update the winner flag if it is
+bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
+{
+	bool status = true;
+
+	if (!CheckIfKingInCheck(color, board))
+	{
+		status = false;
+
+		// iterate through all same color pieces on the board
+		for (int i = 0; i < Common::BOARD_LENGTH; i++)
+		{
+			for (int j = 0; j < Common::BOARD_LENGTH; j++)
+			{
+				Common::PieceInfo * p = board.data[i][j];
+				if (p != nullptr && p->color == color)
+				{
+					// find all possible moves for each piece
+					std::vector<Common::MoveRequest> moves = FindPotentialMoves(board, i, j);
+
+					for (Common::MoveRequest & move : moves)
+					{
+						Common::MiniBoard & testBoard(board);
+						// apply each move to test board and check for check again
+						ApplyMove(move, testBoard);
+
+						// if way out found, return true
+						if (CheckIfKingInCheck(color, testBoard))
+						{
+							return true;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return status;
+}
+
+int main()
+{
 	return 0;
 }
