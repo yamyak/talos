@@ -11,6 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frontend", "Frontend\Fronte
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BackendInterface", "BackendInterface\BackendInterface.vcxproj", "{997D0968-DA14-4DDD-B5CD-8BE0606F9123}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ABFDAA79-C998-4F34-BD31-01EBBCA28D2E} = {ABFDAA79-C998-4F34-BD31-01EBBCA28D2E}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,10 +1,20 @@
 #pragma once
 
+#include "Game.h"
+
 using namespace System;
 
 namespace BackendInterface {
-	public ref class Class1
+	public ref class BackendWrapper
 	{
-		// TODO: Add your methods for this class here.
+	public:
+		BackendWrapper();
+
+		bool InitializeWrapper();
+		bool AttemptMoveWrapper();
+		bool CheckGameStatusWrapper();
+
+	private:
+		Game * m_game;
 	};
 }
