@@ -189,8 +189,66 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 		break;
 	}
 	case Common::PieceType::PAWN:
-		// STILL NEEDS TO BE IMPLEMENTED **************************************************
+	{
+		// check if location 1 unit forward is on board
+		if (Common::CheckIfOnBoard(x, y + 1))
+		{
+			// if location empty, create move request and add to list
+			Common::PieceInfo * potential = board.data[x][y + 1];
+			if (potential == nullptr)
+			{
+				Common::MoveRequest req;
+				req.type = p->type;
+				req.xOld = x;
+				req.yOld = y;
+				req.xNew = x;
+				req.yNew = y + 1;
+				moves.push_back(req);
+
+				// check if first move and location 2 units forward is on board
+				if (y == 1 && Common::CheckIfOnBoard(x, y + 2))
+				{
+					// if location empty, create move request and add to list
+					Common::PieceInfo * potential = board.data[x][y + 2];
+					if (potential == nullptr)
+					{
+						Common::MoveRequest req;
+						req.type = p->type;
+						req.xOld = x;
+						req.yOld = y;
+						req.xNew = x;
+						req.yNew = y + 2;
+						moves.push_back(req);
+					}
+				}
+			}
+		}
+
+		// check 2 1-step forward diagonal to see if possible move
+		const std::vector<int> d_moves = { -1, 1 };
+		for (int m : d_moves)
+		{
+			// check if potential move location is on board
+			if (Common::CheckIfOnBoard(x + m, y + 1))
+			{
+				// if location not empty and filled with opposing color piece
+				// create move request and add to list
+				Common::PieceInfo * diagonal_p = board.data[x + m][y + 1];
+				if (diagonal_p != nullptr && diagonal_p->color != p->color)
+				{
+					Common::MoveRequest req;
+					req.type = p->type;
+					req.xOld = x;
+					req.yOld = y;
+					req.xNew = x + m;
+					req.yNew = y + 1;
+					moves.push_back(req);
+				}
+			}
+		}
+
 		break;
+	}
 	case Common::PieceType::ROOK:
 	{
 		// create list of all directions rook can move in and iterate through those directions to create move requests
