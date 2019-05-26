@@ -12,7 +12,6 @@ public:
 
 	bool Initialize(Common::MiniBoard & board);
 	bool AttemptMove(Common::Color & color, Common::MoveRequest & move, Common::MiniBoard & board);
-
 	bool CheckGameStatus(Common::Color & color, Common::MiniBoard & board);
 
 private:

@@ -33,6 +33,8 @@ namespace Common
 		PieceInfo(PieceInfo * p) : type(p->type), color(p->color) {}
 	};
 
+	// portable board that holds status of the game board
+	// passed in with all commands
 	struct MiniBoard
 	{
 		PieceInfo * data[BOARD_LENGTH][BOARD_LENGTH];
@@ -53,7 +55,7 @@ namespace Common
 		}
 	};
 
-	// structure provided to board from the player
+	// structure provided to backend from the player
 	// contains the move the player wishes to make
 	struct MoveRequest
 	{

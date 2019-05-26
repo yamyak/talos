@@ -12,6 +12,7 @@ Game::~Game()
 }
 
 // check if king is in check
+// returns false if king IS IN check
 bool Game::CheckIfKingInCheck(Common::Color color, Common::MiniBoard & board)
 {
 	bool valid = true;
@@ -19,8 +20,10 @@ bool Game::CheckIfKingInCheck(Common::Color color, Common::MiniBoard & board)
 	// get location of king
 	std::pair<int, int> kingLoc = GetKingLocation(color, board);
 	
+	// check for special case where king attacked by pawn
 	valid = m_validator.CheckPawnAggressors(kingLoc, color, board);
 
+	// check for special case where king attacked by knight
 	valid = valid && m_validator.CheckKnightAggressors(kingLoc, color, board);
 
 	std::set<Common::PieceType> lethalTypes;
@@ -50,16 +53,19 @@ std::pair<int, int> Game::GetKingLocation(Common::Color color, Common::MiniBoard
 {
 	std::pair<int, int> loc;
 
+	// iterate through all locations on the board
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
 		for (int j = 0; j < Common::BOARD_LENGTH; j++)
 		{
 			Common::PieceInfo * ptr = board.data[i][j];
 
+			// check if piece in location is a king of own color
 			if (ptr != nullptr && ptr->color == color && ptr->type == Common::PieceType::KING)
 			{
 				loc.first = i;
 				loc.second = j;
+				break;
 			}
 		}
 	}
@@ -67,24 +73,30 @@ std::pair<int, int> Game::GetKingLocation(Common::Color color, Common::MiniBoard
 	return loc;
 }
 
+// iterates in all directions provided and creates move requests to return
 std::vector<Common::MoveRequest> Game::FindStraightLineMoves(Common::MiniBoard & board, int x, int y,
 	const std::vector<std::pair<int, int>> & steps, Common::Color & color, Common::PieceType & type)
 {
 	std::vector<Common::MoveRequest> moves;
 
+	// iterate through all directions
 	for (const std::pair<int, int> & step : steps)
 	{
 		bool go = true;
 
+		// loop while stepping forward
 		while (go)
 		{
+			// move 1 step in current direction
 			int xLoc = x + step.first;
 			int yLoc = y + step.second;
 
+			// check if current location is still on board
 			if (Common::CheckIfOnBoard(xLoc, yLoc))
 			{
+				// if location empty or piece there is opposing color
+				// create move request and add to list
 				Common::PieceInfo * potential = board.data[xLoc][yLoc];
-
 				if (potential == nullptr || potential->color != color)
 				{
 					Common::MoveRequest req;
@@ -95,19 +107,25 @@ std::vector<Common::MoveRequest> Game::FindStraightLineMoves(Common::MiniBoard &
 					req.yNew = yLoc;
 					moves.push_back(req);
 
+					// if opposing color piece found, then end the loop
+					// can not move any further down this path
 					if (potential != nullptr)
 					{
-						break;
+						go = false;
 					}
 				}
 				else
 				{
-					break;
+					// if same color piece found, then end the loop
+					// can not move any further down this path
+					go = false;
 				}
 			}
 			else
 			{
-				break;
+				// if no longer on game board, then end the loop
+				// can not move any further down this path
+				go = false;
 			}
 		}
 	}
@@ -115,17 +133,21 @@ std::vector<Common::MoveRequest> Game::FindStraightLineMoves(Common::MiniBoard &
 	return moves;
 }
 
+// creates move requests for valid moves provided
 std::vector<Common::MoveRequest> Game::FindSpotMoves(Common::MiniBoard & board, int x, int y,
 	const std::vector<std::pair<int, int>> & locs, Common::Color & color, Common::PieceType & type)
 {
 	std::vector<Common::MoveRequest> moves;
 
+	// iterate through moves provided
 	for (const std::pair<int, int> & loc : locs)
 	{
+		// check if target location is on the board
 		if (Common::CheckIfOnBoard(x + loc.first, y + loc.second))
 		{
+			// if location empty or piece there is opposing color
+			// create move request and add to list
 			Common::PieceInfo * potential = board.data[x + loc.first][y + loc.second];
-
 			if (potential == nullptr || potential->color != color)
 			{
 				Common::MoveRequest req;
@@ -142,42 +164,50 @@ std::vector<Common::MoveRequest> Game::FindSpotMoves(Common::MiniBoard & board, 
 	return moves;
 }
 
+// create list of all potential moves that piece in provided location can make
 std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & board, int x, int y)
 {
 	std::vector<Common::MoveRequest> moves;
 
+	// get piece in location
 	Common::PieceInfo * p = board.data[x][y];
 
 	switch (p->type)
 	{
 	case Common::PieceType::KING:
 	{
-		const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
+		// create list of all moves king can make and create move requests for them
+		const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
 		moves = FindSpotMoves(board, x, y, locs, p->color, p->type);
 		break;
 	}
 	case Common::PieceType::QUEEN:
 	{
+		// create list of all directions queen can move in and iterate through those directions to create move requests
 		const std::vector<std::pair<int, int>> steps = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
 		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
 		break;
 	}
 	case Common::PieceType::PAWN:
+		// STILL NEEDS TO BE IMPLEMENTED **************************************************
 		break;
 	case Common::PieceType::ROOK:
 	{
+		// create list of all directions rook can move in and iterate through those directions to create move requests
 		const std::vector<std::pair<int, int>> steps = { {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
 		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
 		break;
 	}
 	case Common::PieceType::BISHOP:
 	{
+		// create list of all directions bishop can move in and iterate through those directions to create move requests
 		const std::vector<std::pair<int, int>> steps = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
 		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
 		break;
 	}
 	case Common::PieceType::KNIGHT:
 	{
+		// create list of all moves knight can make and create move requests for them
 		const std::vector<std::pair<int, int>> locs = { {1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1} };
 		moves = FindSpotMoves(board, x, y, locs, p->color, p->type);
 		break;
@@ -210,6 +240,7 @@ void Game::ApplyMove(Common::MoveRequest & move, Common::MiniBoard & board)
 	board.data[move.xNew][move.yNew] = p;
 }
 
+// initializes the game board with all pieces
 bool Game::Initialize(Common::MiniBoard & board)
 {
 	// add the pawns to the board
@@ -251,6 +282,7 @@ bool Game::Initialize(Common::MiniBoard & board)
 	return true;
 }
 
+// attempts to apply the move request on the board provided
 bool Game::AttemptMove(Common::Color & color, Common::MoveRequest & move, Common::MiniBoard & board)
 {
 	bool status = false;
@@ -258,12 +290,14 @@ bool Game::AttemptMove(Common::Color & color, Common::MoveRequest & move, Common
 	// check if the move is a valid one
 	if (m_validator.CheckMoveRequest(color, move, board))
 	{
+		// apply the move to a test board
 		Common::MiniBoard testBoard(board);
 		ApplyMove(move, testBoard);
 
+		// check if move puts own king in check
 		if (CheckIfKingInCheck(color, testBoard))
 		{
-			// apply the move to the board
+			// apply the move to the actual board
 			ApplyMove(move, board);
 			status = true;
 		}
@@ -272,34 +306,38 @@ bool Game::AttemptMove(Common::Color & color, Common::MoveRequest & move, Common
 	return status;
 }
 
-// check if next player's king is in check mate
-// update the winner flag if it is
+// check if player's king is in check mate
+// returns false if the player's king IS IN checkmate
 bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
 {
 	bool status = true;
 
+	// check if king is in check
+	// checks all potential moves for solution if king in check
 	if (!CheckIfKingInCheck(color, board))
 	{
 		status = false;
 
-		// iterate through all same color pieces on the board
+		// iterate through all locations on board
 		for (int i = 0; i < Common::BOARD_LENGTH; i++)
 		{
 			for (int j = 0; j < Common::BOARD_LENGTH; j++)
 			{
+				// make sure piece in location and is own color
 				Common::PieceInfo * p = board.data[i][j];
 				if (p != nullptr && p->color == color)
 				{
-					// find all possible moves for each piece
+					// find all possible moves for current piece
 					std::vector<Common::MoveRequest> moves = FindPotentialMoves(board, i, j);
 
+					// iterate through all possible moves for current piece
 					for (Common::MoveRequest & move : moves)
 					{
+						// apply each move to test board
 						Common::MiniBoard & testBoard(board);
-						// apply each move to test board and check for check again
 						ApplyMove(move, testBoard);
 
-						// if way out found, return true
+						// check if king is still in check
 						if (CheckIfKingInCheck(color, testBoard))
 						{
 							return true;
