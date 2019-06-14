@@ -26,4 +26,3 @@ private:
 	const std::vector<std::pair<int, int>> & locs, Common::Color & color, Common::PieceType & type);
 	void ApplyMove(Common::MoveRequest & move, Common::MiniBoard & board);
 };
-
