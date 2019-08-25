@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#define BACKEND_EXPORTS
+
 #include "Game.h"
 #include "Common.h"
 
@@ -301,6 +303,8 @@ void Game::ApplyMove(Common::MoveRequest & move, Common::MiniBoard & board)
 // initializes the game board with all pieces
 bool Game::Initialize(Common::MiniBoard & board)
 {
+	m_currentTurn = Common::Color::WHITE;
+
 	// add the pawns to the board
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
@@ -331,32 +335,38 @@ bool Game::Initialize(Common::MiniBoard & board)
 
 	// add the queens to the board
 	board.data[3][0] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::WHITE);
-	board.data[4][7] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::BLACK);
+	board.data[3][7] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::BLACK);
 
 	// add the kings to the board
 	board.data[4][0] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::WHITE);
-	board.data[3][7] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::BLACK);
+	board.data[4][7] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::BLACK);
 
 	return true;
 }
 
+Common::Color Game::GetCurrentTurn()
+{
+	return m_currentTurn;
+}
+
 // attempts to apply the move request on the board provided
-bool Game::AttemptMove(Common::Color & color, Common::MoveRequest & move, Common::MiniBoard & board)
+bool Game::AttemptMove(Common::MoveRequest & move, Common::MiniBoard & board)
 {
 	bool status = false;
 
 	// check if the move is a valid one
-	if (m_validator.CheckMoveRequest(color, move, board))
+	if (m_validator.CheckMoveRequest(m_currentTurn, move, board))
 	{
 		// apply the move to a test board
 		Common::MiniBoard testBoard(board);
 		ApplyMove(move, testBoard);
 
 		// check if move puts own king in check
-		if (CheckIfKingInCheck(color, testBoard))
+		if (CheckIfKingInCheck(m_currentTurn, testBoard))
 		{
 			// apply the move to the actual board
 			ApplyMove(move, board);
+			m_currentTurn = (m_currentTurn == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
 			status = true;
 		}
 	}
@@ -366,13 +376,13 @@ bool Game::AttemptMove(Common::Color & color, Common::MoveRequest & move, Common
 
 // check if player's king is in check mate
 // returns false if the player's king IS IN checkmate
-bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
+bool Game::CheckGameStatus(Common::MiniBoard & board)
 {
 	bool status = true;
 
 	// check if king is in check
 	// checks all potential moves for solution if king in check
-	if (!CheckIfKingInCheck(color, board))
+	if (!CheckIfKingInCheck(m_currentTurn, board))
 	{
 		status = false;
 
@@ -383,7 +393,7 @@ bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
 			{
 				// make sure piece in location and is own color
 				Common::PieceInfo * p = board.data[i][j];
-				if (p != nullptr && p->color == color)
+				if (p != nullptr && p->color == m_currentTurn)
 				{
 					// find all possible moves for current piece
 					std::vector<Common::MoveRequest> moves = FindPotentialMoves(board, i, j);
@@ -396,7 +406,7 @@ bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
 						ApplyMove(move, testBoard);
 
 						// check if king is still in check
-						if (CheckIfKingInCheck(color, testBoard))
+						if (CheckIfKingInCheck(m_currentTurn, testBoard))
 						{
 							return true;
 						}
@@ -407,9 +417,4 @@ bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
 	}
 
 	return status;
-}
-
-int main()
-{
-	return 0;
 }

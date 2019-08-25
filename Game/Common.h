@@ -39,8 +39,18 @@ namespace Common
 	{
 		PieceInfo * data[BOARD_LENGTH][BOARD_LENGTH];
 
-		MiniBoard() {}
-		MiniBoard(MiniBoard * b)
+		MiniBoard() 
+		{
+			for (int i = 0; i < BOARD_LENGTH; i++)
+			{
+				for (int j = 0; j < BOARD_LENGTH; j++)
+				{
+					data[i][j] = nullptr;
+				}
+			}
+		}
+
+		MiniBoard(MiniBoard * b) : MiniBoard()
 		{
 			for (int i = 0; i < BOARD_LENGTH; i++)
 			{
@@ -49,6 +59,26 @@ namespace Common
 					if (b->data[i][j] != nullptr)
 					{
 						data[i][j] = new Common::PieceInfo(b->data[i][j]);
+					}
+				}
+			}
+		}
+
+		~MiniBoard()
+		{
+			Clear();
+		}
+
+		void Clear()
+		{
+			for (int i = 0; i < BOARD_LENGTH; i++)
+			{
+				for (int j = 0; j < BOARD_LENGTH; j++)
+				{
+					if (data[i][j] != nullptr)
+					{
+						delete data[i][j];
+						data[i][j] = nullptr;
 					}
 				}
 			}
@@ -64,6 +94,8 @@ namespace Common
 		int yOld;
 		int xNew;
 		int yNew;
+
+		MoveRequest() {}
 	};
 
 	// function to check if provided x,y coordinates are located within board limits

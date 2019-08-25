@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 
 #include "Common.h"
 
@@ -10,6 +11,10 @@ public:
 	Display();
 	~Display();
 
-	bool DisplayBoard(Common::MiniBoard & board);
-	Common::MoveRequest PromptUser(std::string prompt);
+	bool DisplayBoard(Common::Color currentSide, Common::MiniBoard & board);
+	Common::MoveRequest PromptUser(std::string & msg);
+	void InformUser(std::string & msg);
+
+private:
+	std::map<int, std::map<int, std::string>> ConvertBoardToText(Common::Color currentSide, Common::MiniBoard & board);
 };

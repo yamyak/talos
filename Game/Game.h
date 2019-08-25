@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef BACKEND_EXPORTS
+#define BACKEND_API __declspec(dllexport)
+#else
+#define BACKEND_API __declspec(dllimport)
+#endif
+
 #include "Validator.h"
 
 #include <vector>
@@ -7,14 +13,16 @@
 class Game
 {
 public:
-	Game();
-	~Game();
+	BACKEND_API Game();
+	BACKEND_API ~Game();
 
-	bool Initialize(Common::MiniBoard & board);
-	bool AttemptMove(Common::Color & color, Common::MoveRequest & move, Common::MiniBoard & board);
-	bool CheckGameStatus(Common::Color & color, Common::MiniBoard & board);
+	BACKEND_API bool Initialize(Common::MiniBoard & board);
+	BACKEND_API bool AttemptMove(Common::MoveRequest & move, Common::MiniBoard & board);
+	BACKEND_API bool CheckGameStatus(Common::MiniBoard & board);
+	BACKEND_API Common::Color GetCurrentTurn();
 
 private:
+	Common::Color m_currentTurn;
 	Validator m_validator;
 
 	bool CheckIfKingInCheck(Common::Color color, Common::MiniBoard & board);
