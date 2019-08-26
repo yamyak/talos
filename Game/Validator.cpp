@@ -23,7 +23,7 @@ bool Validator::CheckPathForObstacles(Common::MoveRequest & move, Common::MiniBo
 		if (move.yNew - move.yOld == 2)
 		{
 			// make sure space 1 unit ahead is not occupied
-			valid = board.data[move.xNew][move.yNew - 1] == nullptr;
+			valid = !board.data[move.xNew][move.yNew - 1].occupied;
 		}
 		break;
 	case Common::PieceType::BISHOP:
@@ -46,7 +46,7 @@ bool Validator::CheckPathForObstacles(Common::MoveRequest & move, Common::MiniBo
 		while (valid && xStart != move.xNew && yStart != move.yNew)
 		{
 			// make sure no pieces are in that location
-			valid = board.data[xStart][yStart] == nullptr;
+			valid = !board.data[xStart][yStart].occupied;
 
 			xStart += xDelta;
 			yStart += yDelta;
@@ -73,8 +73,8 @@ bool Validator::CheckPawnAggressors(std::pair<int, int> kingLoc, Common::Color c
 		if (valid && Common::CheckIfOnBoard(x, kingLoc.second + 1))
 		{
 			// check if piece found at location, is opposing color, and a pawn
-			Common::PieceInfo * p = board.data[x][kingLoc.second + 1];
-			if (p != nullptr && p->color != color && p->type == Common::PieceType::PAWN)
+			Common::PieceInfo & p = board.data[x][kingLoc.second + 1];
+			if (p.occupied && p.color != color && p.type == Common::PieceType::PAWN)
 			{
 				valid = false;
 			}
@@ -104,8 +104,8 @@ bool Validator::CheckKnightAggressors(std::pair<int, int> kingLoc, Common::Color
 		if (Common::CheckIfOnBoard(xLoc, yLoc))
 		{
 			// check if piece found at location, is opposing color, and a knight
-			Common::PieceInfo * p = board.data[xLoc][yLoc];
-			if (p != nullptr && p->color != color && p->type == Common::PieceType::KNIGHT)
+			Common::PieceInfo & p = board.data[xLoc][yLoc];
+			if (p.occupied && p.color != color && p.type == Common::PieceType::KNIGHT)
 			{
 				valid = false;
 			}
@@ -139,10 +139,10 @@ bool Validator::CheckMovePath(Common::MoveRequest & move, Common::MiniBoard & bo
 		{
 			// if target location occupied, already checked that piece is enemy type
 			// don't need to check it again
-			Common::PieceInfo * p = board.data[move.xNew][move.yNew];
+			Common::PieceInfo & p = board.data[move.xNew][move.yNew];
 			
 			// make sure only moved forward 1 unit and target is occupied
-			valid = yDelta == 1 && p != nullptr;
+			valid = yDelta == 1 && p.occupied;
 		}
 		else if(xDeltaAbs == 0)
 		{
@@ -191,16 +191,17 @@ bool Validator::CheckMoveRequest(Common::Color color, Common::MoveRequest & move
 	valid = valid && (move.xNew != move.xOld || move.yNew != move.yOld);
 
 	// check that there is a piece at the starting location
-	Common::PieceInfo * moving = valid ? board.data[move.xOld][move.yOld] : nullptr;
+	Common::PieceInfo & moving = board.data[move.xOld][move.yOld];
+	valid = valid && moving.occupied;
 
 	// check that correct piece is at the starting location
-	valid = valid && moving != nullptr && moving->color == color && moving->type == move.type;
+	valid = valid && moving.color == color && moving.type == move.type;
 
 	// if a piece is at the destination, check that it is an enemy piece
-	Common::PieceInfo * target = valid ? board.data[move.xNew][move.yNew] : nullptr;
-	if (target != nullptr)
+	Common::PieceInfo & target = board.data[move.xNew][move.yNew];
+	if (target.occupied)
 	{
-		valid = valid && target->color != color;
+		valid = valid && target.color != color;
 	}
 
 	// check that move is valid for piece
@@ -224,11 +225,11 @@ bool Validator::CheckStraightPathForAggressors(std::pair<int, int> kingLoc, Comm
 	while (Common::CheckIfOnBoard(xStart, yStart))
 	{
 		// check if piece found in current location on path
-		Common::PieceInfo * p = board.data[xStart][yStart];
-		if (p != nullptr)
+		Common::PieceInfo & p = board.data[xStart][yStart];
+		if (p.occupied)
 		{
 			// check to see if piece is opposing color and in piece type set parameter
-			if (p->color != color && types.find(p->type) != types.end())
+			if (p.color != color && types.find(p.type) != types.end())
 			{
 				valid = false;
 			}

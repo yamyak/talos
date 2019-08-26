@@ -64,17 +64,17 @@ std::map<int, std::map<int, std::string>> Display::ConvertBoardToText(Common::Co
 		{
 			int jT = (currentSide == Common::Color::BLACK) ? Common::BOARD_LENGTH - j - 1 : j;
 
-			if (board.data[j][i] == nullptr)
+			if (!board.data[j][i].occupied)
 			{
 				output[iT][jT] = "00";
 			}
 			else
 			{
-				Common::PieceInfo * p = board.data[j][i];
+				Common::PieceInfo & p = board.data[j][i];
 
-				output[iT][jT] = (p->color == Common::Color::WHITE) ? "W" : "B";
+				output[iT][jT] = (p.color == Common::Color::WHITE) ? "W" : "B";
 				
-				switch (p->type)
+				switch (p.type)
 				{
 					case Common::PieceType::KING:
 						output[iT][jT] += "K";

@@ -26,39 +26,44 @@ namespace Common
 	// structure that hold piece info
 	struct PieceInfo
 	{
+		bool occupied;
 		PieceType type;
 		Color color;
 
-		PieceInfo(PieceType t, Color c) : type(t), color(c) {}
-		PieceInfo(PieceInfo * p) : type(p->type), color(p->color) {}
+		PieceInfo() : occupied(false) {}
+
+		void Update(PieceInfo & p)
+		{
+			occupied = true;
+			type = p.type;
+			color = p.color;
+		}
+
+		void Update(PieceType t, Color c)
+		{
+			occupied = true;
+			type = t;
+			color = c;
+		}
 	};
 
 	// portable board that holds status of the game board
 	// passed in with all commands
 	struct MiniBoard
 	{
-		PieceInfo * data[BOARD_LENGTH][BOARD_LENGTH];
+		PieceInfo data[BOARD_LENGTH][BOARD_LENGTH];
 
-		MiniBoard() 
+		MiniBoard() {}
+
+		MiniBoard(MiniBoard & b)
 		{
 			for (int i = 0; i < BOARD_LENGTH; i++)
 			{
 				for (int j = 0; j < BOARD_LENGTH; j++)
 				{
-					data[i][j] = nullptr;
-				}
-			}
-		}
-
-		MiniBoard(MiniBoard * b) : MiniBoard()
-		{
-			for (int i = 0; i < BOARD_LENGTH; i++)
-			{
-				for (int j = 0; j < BOARD_LENGTH; j++)
-				{
-					if (b->data[i][j] != nullptr)
+					if (b.data[i][j].occupied)
 					{
-						data[i][j] = new Common::PieceInfo(b->data[i][j]);
+						data[i][j].Update(b.data[i][j]);
 					}
 				}
 			}
@@ -75,11 +80,7 @@ namespace Common
 			{
 				for (int j = 0; j < BOARD_LENGTH; j++)
 				{
-					if (data[i][j] != nullptr)
-					{
-						delete data[i][j];
-						data[i][j] = nullptr;
-					}
+					data[i][j].occupied = false;
 				}
 			}
 		}

@@ -57,9 +57,9 @@ void Manager::TransposeBoard(Common::MiniBoard & board)
 	{
 		for (int j = 0; j < Common::BOARD_LENGTH; j++)
 		{
-			if (tempBoard.data[i][j] != nullptr)
+			if (tempBoard.data[i][j].occupied)
 			{
-				board.data[Common::BOARD_LENGTH - i - 1][Common::BOARD_LENGTH - j - 1] = new Common::PieceInfo(tempBoard.data[i][j]);
+				board.data[Common::BOARD_LENGTH - i - 1][Common::BOARD_LENGTH - j - 1].Update(tempBoard.data[i][j]);
 			}
 		}
 	}

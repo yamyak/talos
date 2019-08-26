@@ -60,10 +60,10 @@ std::pair<int, int> Game::GetKingLocation(Common::Color color, Common::MiniBoard
 	{
 		for (int j = 0; j < Common::BOARD_LENGTH; j++)
 		{
-			Common::PieceInfo * ptr = board.data[i][j];
+			Common::PieceInfo & piece = board.data[i][j];
 
 			// check if piece in location is a king of own color
-			if (ptr != nullptr && ptr->color == color && ptr->type == Common::PieceType::KING)
+			if (piece.occupied && piece.color == color && piece.type == Common::PieceType::KING)
 			{
 				loc.first = i;
 				loc.second = j;
@@ -98,8 +98,8 @@ std::vector<Common::MoveRequest> Game::FindStraightLineMoves(Common::MiniBoard &
 			{
 				// if location empty or piece there is opposing color
 				// create move request and add to list
-				Common::PieceInfo * potential = board.data[xLoc][yLoc];
-				if (potential == nullptr || potential->color != color)
+				Common::PieceInfo & potential = board.data[xLoc][yLoc];
+				if (!potential.occupied || potential.color != color)
 				{
 					Common::MoveRequest req;
 					req.type = type;
@@ -111,7 +111,7 @@ std::vector<Common::MoveRequest> Game::FindStraightLineMoves(Common::MiniBoard &
 
 					// if opposing color piece found, then end the loop
 					// can not move any further down this path
-					if (potential != nullptr)
+					if (potential.occupied)
 					{
 						go = false;
 					}
@@ -149,8 +149,8 @@ std::vector<Common::MoveRequest> Game::FindSpotMoves(Common::MiniBoard & board, 
 		{
 			// if location empty or piece there is opposing color
 			// create move request and add to list
-			Common::PieceInfo * potential = board.data[x + loc.first][y + loc.second];
-			if (potential == nullptr || potential->color != color)
+			Common::PieceInfo & potential = board.data[x + loc.first][y + loc.second];
+			if (!potential.occupied || potential.color != color)
 			{
 				Common::MoveRequest req;
 				req.type = type;
@@ -172,22 +172,22 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 	std::vector<Common::MoveRequest> moves;
 
 	// get piece in location
-	Common::PieceInfo * p = board.data[x][y];
+	Common::PieceInfo & p = board.data[x][y];
 
-	switch (p->type)
+	switch (p.type)
 	{
 	case Common::PieceType::KING:
 	{
 		// create list of all moves king can make and create move requests for them
 		const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
-		moves = FindSpotMoves(board, x, y, locs, p->color, p->type);
+		moves = FindSpotMoves(board, x, y, locs, p.color, p.type);
 		break;
 	}
 	case Common::PieceType::QUEEN:
 	{
 		// create list of all directions queen can move in and iterate through those directions to create move requests
 		const std::vector<std::pair<int, int>> steps = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
-		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
+		moves = FindStraightLineMoves(board, x, y, steps, p.color, p.type);
 		break;
 	}
 	case Common::PieceType::PAWN:
@@ -196,11 +196,11 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 		if (Common::CheckIfOnBoard(x, y + 1))
 		{
 			// if location empty, create move request and add to list
-			Common::PieceInfo * potential = board.data[x][y + 1];
-			if (potential == nullptr)
+			Common::PieceInfo & potential = board.data[x][y + 1];
+			if (!potential.occupied)
 			{
 				Common::MoveRequest req;
-				req.type = p->type;
+				req.type = p.type;
 				req.xOld = x;
 				req.yOld = y;
 				req.xNew = x;
@@ -211,11 +211,11 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 				if (y == 1 && Common::CheckIfOnBoard(x, y + 2))
 				{
 					// if location empty, create move request and add to list
-					Common::PieceInfo * potential = board.data[x][y + 2];
-					if (potential == nullptr)
+					Common::PieceInfo & potential = board.data[x][y + 2];
+					if (!potential.occupied)
 					{
 						Common::MoveRequest req;
-						req.type = p->type;
+						req.type = p.type;
 						req.xOld = x;
 						req.yOld = y;
 						req.xNew = x;
@@ -235,11 +235,11 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 			{
 				// if location not empty and filled with opposing color piece
 				// create move request and add to list
-				Common::PieceInfo * diagonal_p = board.data[x + m][y + 1];
-				if (diagonal_p != nullptr && diagonal_p->color != p->color)
+				Common::PieceInfo & diagonal_p = board.data[x + m][y + 1];
+				if (diagonal_p.occupied && diagonal_p.color != p.color)
 				{
 					Common::MoveRequest req;
-					req.type = p->type;
+					req.type = p.type;
 					req.xOld = x;
 					req.yOld = y;
 					req.xNew = x + m;
@@ -255,21 +255,21 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 	{
 		// create list of all directions rook can move in and iterate through those directions to create move requests
 		const std::vector<std::pair<int, int>> steps = { {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
-		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
+		moves = FindStraightLineMoves(board, x, y, steps, p.color, p.type);
 		break;
 	}
 	case Common::PieceType::BISHOP:
 	{
 		// create list of all directions bishop can move in and iterate through those directions to create move requests
 		const std::vector<std::pair<int, int>> steps = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
-		moves = FindStraightLineMoves(board, x, y, steps, p->color, p->type);
+		moves = FindStraightLineMoves(board, x, y, steps, p.color, p.type);
 		break;
 	}
 	case Common::PieceType::KNIGHT:
 	{
 		// create list of all moves knight can make and create move requests for them
 		const std::vector<std::pair<int, int>> locs = { {1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1} };
-		moves = FindSpotMoves(board, x, y, locs, p->color, p->type);
+		moves = FindSpotMoves(board, x, y, locs, p.color, p.type);
 		break;
 	}
 	default:
@@ -283,18 +283,9 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 void Game::ApplyMove(Common::MoveRequest & move, Common::MiniBoard & board)
 {
 	// retrieve the piece to be moved
-	Common::PieceInfo * p = board.data[move.xOld][move.yOld];
+	Common::PieceInfo & p = board.data[move.xOld][move.yOld];
 	// clear out the old piece location
-	board.data[move.xOld][move.yOld] = nullptr;
-
-	// check if new location is not empty
-	if (board.data[move.xNew][move.yNew] != nullptr)
-	{
-		// retrieve the piece that will be killed and delete it
-		Common::PieceInfo * dead = board.data[move.xNew][move.yNew];
-		delete dead;
-		dead = nullptr;
-	}
+	board.data[move.xOld][move.yOld].occupied = false;
 
 	// move piece to new location
 	board.data[move.xNew][move.yNew] = p;
@@ -308,38 +299,38 @@ bool Game::Initialize(Common::MiniBoard & board)
 	// add the pawns to the board
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
-		board.data[i][1] = new Common::PieceInfo(Common::PieceType::PAWN, Common::Color::WHITE);
-		board.data[i][6] = new Common::PieceInfo(Common::PieceType::PAWN, Common::Color::BLACK);
+		board.data[i][1].Update(Common::PieceType::PAWN, Common::Color::WHITE);
+		board.data[i][6].Update(Common::PieceType::PAWN, Common::Color::BLACK);
 	}
 
 	// add the rooks to the board
-	board.data[0][0] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::WHITE);
-	board.data[7][0] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::WHITE);
+	board.data[0][0].Update(Common::PieceType::ROOK, Common::Color::WHITE);
+	board.data[7][0].Update(Common::PieceType::ROOK, Common::Color::WHITE);
 
-	board.data[0][7] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::BLACK);
-	board.data[7][7] = new Common::PieceInfo(Common::PieceType::ROOK, Common::Color::BLACK);
+	board.data[0][7].Update(Common::PieceType::ROOK, Common::Color::BLACK);
+	board.data[7][7].Update(Common::PieceType::ROOK, Common::Color::BLACK);
 
 	// add the knights to the board
-	board.data[1][0] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::WHITE);
-	board.data[6][0] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::WHITE);
+	board.data[1][0].Update(Common::PieceType::KNIGHT, Common::Color::WHITE);
+	board.data[6][0].Update(Common::PieceType::KNIGHT, Common::Color::WHITE);
 
-	board.data[1][7] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::BLACK);
-	board.data[6][7] = new Common::PieceInfo(Common::PieceType::KNIGHT, Common::Color::BLACK);
+	board.data[1][7].Update(Common::PieceType::KNIGHT, Common::Color::BLACK);
+	board.data[6][7].Update(Common::PieceType::KNIGHT, Common::Color::BLACK);
 
 	// add the bishops to the board
-	board.data[2][0] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::WHITE);
-	board.data[5][0] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::WHITE);
+	board.data[2][0].Update(Common::PieceType::BISHOP, Common::Color::WHITE);
+	board.data[5][0].Update(Common::PieceType::BISHOP, Common::Color::WHITE);
 
-	board.data[2][7] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::BLACK);
-	board.data[5][7] = new Common::PieceInfo(Common::PieceType::BISHOP, Common::Color::BLACK);
+	board.data[2][7].Update(Common::PieceType::BISHOP, Common::Color::BLACK);
+	board.data[5][7].Update(Common::PieceType::BISHOP, Common::Color::BLACK);
 
 	// add the queens to the board
-	board.data[3][0] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::WHITE);
-	board.data[3][7] = new Common::PieceInfo(Common::PieceType::QUEEN, Common::Color::BLACK);
+	board.data[3][0].Update(Common::PieceType::QUEEN, Common::Color::WHITE);
+	board.data[3][7].Update(Common::PieceType::QUEEN, Common::Color::BLACK);
 
 	// add the kings to the board
-	board.data[4][0] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::WHITE);
-	board.data[4][7] = new Common::PieceInfo(Common::PieceType::KING, Common::Color::BLACK);
+	board.data[4][0].Update(Common::PieceType::KING, Common::Color::WHITE);
+	board.data[4][7].Update(Common::PieceType::KING, Common::Color::BLACK);
 
 	return true;
 }
@@ -392,8 +383,8 @@ bool Game::CheckGameStatus(Common::MiniBoard & board)
 			for (int j = 0; j < Common::BOARD_LENGTH; j++)
 			{
 				// make sure piece in location and is own color
-				Common::PieceInfo * p = board.data[i][j];
-				if (p != nullptr && p->color == m_currentTurn)
+				Common::PieceInfo & p = board.data[i][j];
+				if (p.occupied && p.color == m_currentTurn)
 				{
 					// find all possible moves for current piece
 					std::vector<Common::MoveRequest> moves = FindPotentialMoves(board, i, j);
