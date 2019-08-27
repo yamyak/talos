@@ -86,12 +86,15 @@ std::vector<Common::MoveRequest> Game::FindStraightLineMoves(Common::MiniBoard &
 	{
 		bool go = true;
 
+		int xLoc = x;
+		int yLoc = y;
+
 		// loop while stepping forward
 		while (go)
 		{
 			// move 1 step in current direction
-			int xLoc = x + step.first;
-			int yLoc = y + step.second;
+			xLoc += step.first;
+			yLoc += step.second;
 
 			// check if current location is still on board
 			if (Common::CheckIfOnBoard(xLoc, yLoc))
@@ -196,8 +199,7 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 		if (Common::CheckIfOnBoard(x, y + 1))
 		{
 			// if location empty, create move request and add to list
-			Common::PieceInfo & potential = board.data[x][y + 1];
-			if (!potential.occupied)
+			if (!board.data[x][y + 1].occupied)
 			{
 				Common::MoveRequest req;
 				req.type = p.type;
@@ -211,8 +213,7 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 				if (y == 1 && Common::CheckIfOnBoard(x, y + 2))
 				{
 					// if location empty, create move request and add to list
-					Common::PieceInfo & potential = board.data[x][y + 2];
-					if (!potential.occupied)
+					if (!board.data[x][y + 2].occupied)
 					{
 						Common::MoveRequest req;
 						req.type = p.type;
@@ -282,13 +283,11 @@ std::vector<Common::MoveRequest> Game::FindPotentialMoves(Common::MiniBoard & bo
 // applys the move specified to board specified
 void Game::ApplyMove(Common::MoveRequest & move, Common::MiniBoard & board)
 {
-	// retrieve the piece to be moved
-	Common::PieceInfo & p = board.data[move.xOld][move.yOld];
+	// update new location with piece information
+	board.data[move.xNew][move.yNew].Update(board.data[move.xOld][move.yOld]);
+
 	// clear out the old piece location
 	board.data[move.xOld][move.yOld].occupied = false;
-
-	// move piece to new location
-	board.data[move.xNew][move.yNew] = p;
 }
 
 // initializes the game board with all pieces

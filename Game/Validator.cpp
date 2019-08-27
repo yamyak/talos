@@ -138,11 +138,9 @@ bool Validator::CheckMovePath(Common::MoveRequest & move, Common::MiniBoard & bo
 		if (xDeltaAbs == 1)
 		{
 			// if target location occupied, already checked that piece is enemy type
-			// don't need to check it again
-			Common::PieceInfo & p = board.data[move.xNew][move.yNew];
-			
+			// don't need to check it again	
 			// make sure only moved forward 1 unit and target is occupied
-			valid = yDelta == 1 && p.occupied;
+			valid = yDelta == 1 && board.data[move.xNew][move.yNew].occupied;
 		}
 		else if(xDeltaAbs == 0)
 		{

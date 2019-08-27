@@ -21,7 +21,7 @@ void Manager::Start()
 
 	game.Initialize(board);
 
-	//while (game.CheckGameStatus(board))
+	while (game.CheckGameStatus(board))
 	{
 		TransposeBoard(board);
 		display.DisplayBoard(Common::Color::BLACK, board);
