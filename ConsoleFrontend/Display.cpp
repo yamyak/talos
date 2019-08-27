@@ -22,6 +22,8 @@ bool Display::DisplayBoard(Common::Color currentSide, Common::MiniBoard & board)
 
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
+		PrintLeftKey(currentSide, i);
+
 		for (int j = 0; j < Common::BOARD_LENGTH; j++)
 		{
 			std::cout << std::setw(3) << boardText[i][j];
@@ -30,9 +32,45 @@ bool Display::DisplayBoard(Common::Color currentSide, Common::MiniBoard & board)
 		std::cout << std::endl;
 	}
 
+	PrintBottomKey(currentSide);
+
 	std::cout << std::endl;
 
 	return status;
+}
+
+void Display::PrintBottomKey(Common::Color currentSide)
+{
+	if (currentSide == Common::Color::WHITE)
+	{
+		std::cout << std::setw(5) << " A";
+		std::cout << std::setw(3) << " B";
+		std::cout << std::setw(3) << " C";
+		std::cout << std::setw(3) << " D";
+		std::cout << std::setw(3) << " E";
+		std::cout << std::setw(3) << " F";
+		std::cout << std::setw(3) << " G";
+		std::cout << std::setw(3) << " H";
+	}
+	else
+	{
+		std::cout << std::setw(5) << " H";
+		std::cout << std::setw(3) << " G";
+		std::cout << std::setw(3) << " F";
+		std::cout << std::setw(3) << " E";
+		std::cout << std::setw(3) << " D";
+		std::cout << std::setw(3) << " C";
+		std::cout << std::setw(3) << " B";
+		std::cout << std::setw(3) << " A";
+	}
+
+	std::cout << std::endl;
+}
+
+void Display::PrintLeftKey(Common::Color currentSide, int index)
+{
+	int out = (currentSide == Common::Color::WHITE) ? (Common::BOARD_LENGTH - index) : (index + 1);
+	std::cout << std::setw(2) << std::to_string(out);
 }
 
 Common::MoveRequest Display::PromptUser(std::string & msg)
@@ -58,11 +96,13 @@ std::map<int, std::map<int, std::string>> Display::ConvertBoardToText(Common::Co
 
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
-		int iT = (currentSide == Common::Color::WHITE) ? Common::BOARD_LENGTH - i - 1 : i;
+		//int iT = (currentSide == Common::Color::WHITE) ? Common::BOARD_LENGTH - i - 1 : i;
+		int iT = Common::BOARD_LENGTH - i - 1;
 
 		for (int j = 0; j < Common::BOARD_LENGTH; j++)
 		{
-			int jT = (currentSide == Common::Color::BLACK) ? Common::BOARD_LENGTH - j - 1 : j;
+			//int jT = (currentSide == Common::Color::BLACK) ? Common::BOARD_LENGTH - j - 1 : j;
+			int jT = j;
 
 			if (!board.data[j][i].occupied)
 			{

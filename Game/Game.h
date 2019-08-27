@@ -17,12 +17,10 @@ public:
 	BACKEND_API ~Game();
 
 	BACKEND_API bool Initialize(Common::MiniBoard & board);
-	BACKEND_API bool AttemptMove(Common::MoveRequest & move, Common::MiniBoard & board);
-	BACKEND_API bool CheckGameStatus(Common::MiniBoard & board);
-	BACKEND_API Common::Color GetCurrentTurn();
+	BACKEND_API bool AttemptMove(Common::Color & color, Common::MoveRequest & move, Common::MiniBoard & board);
+	BACKEND_API bool CheckGameStatus(Common::Color & color, Common::MiniBoard & board);
 
 private:
-	Common::Color m_currentTurn;
 	Validator m_validator;
 
 	bool CheckIfKingInCheck(Common::Color color, Common::MiniBoard & board);

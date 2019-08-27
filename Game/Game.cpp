@@ -293,8 +293,6 @@ void Game::ApplyMove(Common::MoveRequest & move, Common::MiniBoard & board)
 // initializes the game board with all pieces
 bool Game::Initialize(Common::MiniBoard & board)
 {
-	m_currentTurn = Common::Color::WHITE;
-
 	// add the pawns to the board
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
@@ -334,29 +332,23 @@ bool Game::Initialize(Common::MiniBoard & board)
 	return true;
 }
 
-Common::Color Game::GetCurrentTurn()
-{
-	return m_currentTurn;
-}
-
 // attempts to apply the move request on the board provided
-bool Game::AttemptMove(Common::MoveRequest & move, Common::MiniBoard & board)
+bool Game::AttemptMove(Common::Color & color, Common::MoveRequest & move, Common::MiniBoard & board)
 {
 	bool status = false;
 
 	// check if the move is a valid one
-	if (m_validator.CheckMoveRequest(m_currentTurn, move, board))
+	if (m_validator.CheckMoveRequest(color, move, board))
 	{
 		// apply the move to a test board
 		Common::MiniBoard testBoard(board);
 		ApplyMove(move, testBoard);
 
 		// check if move puts own king in check
-		if (CheckIfKingInCheck(m_currentTurn, testBoard))
+		if (CheckIfKingInCheck(color, testBoard))
 		{
 			// apply the move to the actual board
 			ApplyMove(move, board);
-			m_currentTurn = (m_currentTurn == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
 			status = true;
 		}
 	}
@@ -366,13 +358,13 @@ bool Game::AttemptMove(Common::MoveRequest & move, Common::MiniBoard & board)
 
 // check if player's king is in check mate
 // returns false if the player's king IS IN checkmate
-bool Game::CheckGameStatus(Common::MiniBoard & board)
+bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
 {
 	bool status = true;
 
 	// check if king is in check
 	// checks all potential moves for solution if king in check
-	if (!CheckIfKingInCheck(m_currentTurn, board))
+	if (!CheckIfKingInCheck(color, board))
 	{
 		status = false;
 
@@ -383,7 +375,7 @@ bool Game::CheckGameStatus(Common::MiniBoard & board)
 			{
 				// make sure piece in location and is own color
 				Common::PieceInfo & p = board.data[i][j];
-				if (p.occupied && p.color == m_currentTurn)
+				if (p.occupied && p.color == color)
 				{
 					// find all possible moves for current piece
 					std::vector<Common::MoveRequest> moves = FindPotentialMoves(board, i, j);
@@ -396,7 +388,7 @@ bool Game::CheckGameStatus(Common::MiniBoard & board)
 						ApplyMove(move, testBoard);
 
 						// check if king is still in check
-						if (CheckIfKingInCheck(m_currentTurn, testBoard))
+						if (CheckIfKingInCheck(color, testBoard))
 						{
 							return true;
 						}

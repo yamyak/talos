@@ -17,4 +17,6 @@ public:
 
 private:
 	std::map<int, std::map<int, std::string>> ConvertBoardToText(Common::Color currentSide, Common::MiniBoard & board);
+	void PrintBottomKey(Common::Color currentSide);
+	void PrintLeftKey(Common::Color currentSide, int index);
 };

@@ -4,6 +4,9 @@
 #include "Display.h"
 #include "Game.h"
 
+const std::string VALID_MOVE_REQUEST = "Please provide a valid move: ";
+const std::string INVALID_MOVE_FOUND = "That move was invalid, please provide a valid move: ";
+
 Manager::Manager()
 {
 }
@@ -21,29 +24,26 @@ void Manager::Start()
 
 	game.Initialize(board);
 
-	while (game.CheckGameStatus(board))
+	Common::Color currentTurn = Common::Color::WHITE;
+	while (game.CheckGameStatus(currentTurn, board))
 	{
-		TransposeBoard(board);
-		display.DisplayBoard(Common::Color::BLACK, board);
+		display.DisplayBoard(currentTurn, board);
 
-		std::string promptMsg = "Please provide a valid move: ";
+		std::string promptMsg = VALID_MOVE_REQUEST;
 		bool validMove = false;
-		bool first = true;
 		while (!validMove)
 		{
 			Common::MoveRequest move = display.PromptUser(promptMsg);
 
-			validMove = game.AttemptMove(move, board);
+			validMove = game.AttemptMove(currentTurn, move, board);
 
-			if (first)
-			{
-				first = false;
-				promptMsg = "Invalid Move. " + promptMsg;
-			}
+			promptMsg = INVALID_MOVE_FOUND;
 		}
+
+		currentTurn = (currentTurn == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
 	}
 
-	std::string winner = (game.GetCurrentTurn() == Common::Color::WHITE) ? "Black" : "White";
+	std::string winner = (currentTurn == Common::Color::WHITE) ? "Black" : "White";
 	winner = "The " + winner + " player has won!";
 	display.InformUser(winner);
 }
