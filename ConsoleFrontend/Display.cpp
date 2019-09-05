@@ -73,16 +73,15 @@ void Display::PrintLeftKey(Common::Color currentSide, int index)
 	std::cout << std::setw(2) << std::to_string(out);
 }
 
-Common::MoveRequest Display::PromptUser(std::string & msg)
+std::string Display::PromptUser(std::string & msg)
 {
-	Common::MoveRequest move;
 
 	std::cout << msg;
 
 	std::string moveStr;
 	std::cin >> moveStr;
 
-	return move;
+	return moveStr;
 }
 
 void Display::InformUser(std::string & msg)

@@ -155,12 +155,14 @@
   <ItemGroup>
     <ClInclude Include="Display.h" />
     <ClInclude Include="Manager.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleFrontend.cpp" />
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="Manager.cpp" />
+    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

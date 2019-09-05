@@ -12,7 +12,7 @@ public:
 	~Display();
 
 	bool DisplayBoard(Common::Color currentSide, Common::MiniBoard & board);
-	Common::MoveRequest PromptUser(std::string & msg);
+	std::string PromptUser(std::string & msg);
 	void InformUser(std::string & msg);
 
 private:
