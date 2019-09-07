@@ -29,14 +29,18 @@ namespace Common
 		bool occupied;
 		PieceType type;
 		Color color;
+		bool moved;
+		bool ghost;
 
-		PieceInfo() : occupied(false) {}
+		PieceInfo() : occupied(false), moved(false), ghost(false) {}
 
 		void Update(PieceInfo & p)
 		{
 			occupied = true;
 			type = p.type;
 			color = p.color;
+			moved = p.moved;
+			ghost = p.ghost;
 		}
 
 		void Update(PieceType t, Color c)
@@ -84,6 +88,17 @@ namespace Common
 				}
 			}
 		}
+
+		void ClearGhosts()
+		{
+			for (int i = 0; i < BOARD_LENGTH; i++)
+			{
+				for (int j = 0; j < BOARD_LENGTH; j++)
+				{
+					data[i][j].ghost = false;
+				}
+			}
+		}
 	};
 
 	// structure provided to backend from the player
@@ -95,6 +110,7 @@ namespace Common
 		int yOld;
 		int xNew;
 		int yNew;
+		PieceType pawnPromotion;
 
 		MoveRequest() {}
 	};
