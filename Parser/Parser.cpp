@@ -1,4 +1,7 @@
-#include "pch.h"
+#include "stdafx.h"
+
+#define PARSER_EXPORTS
+
 #include "Parser.h"
 
 Parser::Parser()
