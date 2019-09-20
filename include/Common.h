@@ -95,6 +95,7 @@ namespace Common
 		int yOld;
 		int xNew;
 		int yNew;
+		PieceType pawnPromotion;
 
 		MoveRequest() {}
 	};
