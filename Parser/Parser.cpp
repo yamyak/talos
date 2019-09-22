@@ -61,27 +61,121 @@ Common::MoveRequest Parser::ParseMove(Common::Color color, Common::MiniBoard & b
 		switch (moveString.at(0))
 		{
 			case('K'):
-				move = ParseKingMove(color, board, moveString.substr(1));
+			{
+				const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
+				move = ParseMoveStringLocations(color, Common::PieceType::KING, board, moveString.substr(1), locs);
 				break;
+			}
 			case('Q'):
-				move = ParseQueenMove(color, board, moveString.substr(1));
+			{
+				const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
+				move = ParseMoveStringLocations(color, Common::PieceType::QUEEN, board, moveString.substr(1), locs);
 				break;
+			}
 			case('R'):
-				move = ParseRookMove(color, board, moveString.substr(1));
+			{
+				const std::vector<std::pair<int, int>> locs = { {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
+				move = ParseMoveStringLocations(color, Common::PieceType::ROOK, board, moveString.substr(1), locs);
 				break;
+			}
 			case('B'):
-				move = ParseBishopMove(color, board, moveString.substr(1));
+			{
+				const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1} };
+				move = ParseMoveStringLocations(color, Common::PieceType::BISHOP, board, moveString.substr(1), locs);
 				break;
+			}
 			case('N'):
-				move = ParseKnightMove(color, board, moveString.substr(1));
+			{
+				const std::vector<std::pair<int, int>> locs = { {1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1} };
+				move = ParseMoveStringLocations(color, Common::PieceType::KNIGHT, board, moveString.substr(1), locs);
 				break;
+			}
 			default:
+			{
 				move = ParsePawnMove(color, board, moveString);
 				break;
+			}
 		}
 	}
 
 	return move;
+}
+
+void Parser::FindPieceInSpots(Common::MiniBoard & board, Common::MoveRequest & move, Common::Color & color,
+	const std::vector<std::pair<int, int>> & locs, std::pair<int, int> conditions)
+{
+	for (const std::pair<int, int> & loc : locs)
+	{
+		int xLoc = move.xNew + loc.first;
+		int yLoc = move.yNew + loc.first;
+
+		if (Common::CheckIfOnBoard(xLoc, yLoc) &&
+			board.data[xLoc][yLoc].occupied &&
+			board.data[xLoc][yLoc].color == color &&
+			board.data[xLoc][yLoc].type == move.type)
+		{
+			if ((conditions.first == -1 && conditions.second == -1) ||
+				(conditions.first == -1 && conditions.second == yLoc) ||
+				(conditions.second == -1 && conditions.first == xLoc))
+			{
+				move.xOld = xLoc;
+				move.yOld = yLoc;
+				break;
+			}
+		}
+	}
+}
+
+void Parser::FindPieceOnLines(Common::MiniBoard & board, Common::MoveRequest & move, Common::Color & color,
+	const std::vector<std::pair<int, int>> & steps, std::pair<int, int> conditions)
+{
+	bool found = false;
+
+	for (const std::pair<int, int> & step : steps)
+	{
+		int xLoc = move.xNew;
+		int yLoc = move.yNew;
+
+		bool blocked = false;
+
+		while (!blocked && !found)
+		{
+			xLoc += step.first;
+			yLoc += step.second;
+
+			if (Common::CheckIfOnBoard(xLoc, yLoc))
+			{
+				if (board.data[xLoc][yLoc].occupied)
+				{
+					if (board.data[xLoc][yLoc].color == color &&
+						board.data[xLoc][yLoc].type == move.type)
+					{
+						if ((conditions.first == -1 && conditions.second == -1) ||
+							(conditions.first == -1 && conditions.second == yLoc) ||
+							(conditions.second == -1 && conditions.first == xLoc))
+						{
+							move.xOld = xLoc;
+							move.yOld = yLoc;
+							found = true;
+						}
+					}
+					else
+					{
+						blocked = true;
+					}
+				}
+			}
+			else
+			{
+				blocked = true;
+			}
+		}
+
+		if (found)
+		{
+			break;
+		}
+	}
 }
 
 Common::MoveRequest Parser::ParsePawnMove(Common::Color color, Common::MiniBoard & board, std::string moveString)
@@ -153,85 +247,14 @@ Common::MoveRequest Parser::ParsePawnMove(Common::Color color, Common::MiniBoard
 	return move;
 }
 
-void Parser::FindPieceInSpots(Common::MiniBoard & board, Common::MoveRequest & move, Common::Color & color,
-	const std::vector<std::pair<int, int>> & locs, std::pair<int, int> conditions)
-{
-	for (const std::pair<int, int> & loc : locs)
-	{
-		if (Common::CheckIfOnBoard(move.xNew + loc.first, move.yNew + loc.second) &&
-			board.data[move.xNew + loc.first][move.yNew + loc.second].occupied &&
-			board.data[move.xNew + loc.first][move.yNew + loc.second].color == color &&
-			board.data[move.xNew + loc.first][move.yNew + loc.second].type == move.type)
-		{
-			if ((conditions.first == -1 && conditions.second == -1) ||
-				(conditions.first == -1 && conditions.second == move.yNew + loc.second) ||
-				(conditions.second == -1 && conditions.first == move.xNew + loc.first))
-			{
-				move.xOld = move.xNew + loc.first;
-				move.yOld = move.yNew + loc.second;
-				break;
-			}
-		}
-	}
-}
-
-Common::MoveRequest Parser::ParseKingMove(Common::Color color, Common::MiniBoard & board, std::string moveString)
+Common::MoveRequest Parser::ParseMoveStringLocations(Common::Color color, Common::PieceType type, Common::MiniBoard & board, 
+	std::string moveString, const std::vector<std::pair<int, int>> & locs)
 {
 	Common::MoveRequest move;
-	move.type = Common::PieceType::KING;
+	move.type = type;
 	move.xOld = -1;
 	move.yOld = -1;
 
-	size_t xPos = moveString.find('x');
-	if (xPos != std::string::npos)
-	{
-		move.xNew = GetIntegerFile(color, moveString.at(xPos + 1));
-		move.yNew = GetIntegerRank(color, moveString.at(xPos + 2));
-	}
-	else
-	{
-		move.xNew = GetIntegerFile(color, moveString.at(0));
-		move.yNew = GetIntegerRank(color, moveString.at(1));
-	}
-
-	const std::vector<std::pair<int, int>> locs = { {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
-	FindPieceInSpots(board, move, color, locs, std::pair<int, int> {-1, -1});
-
-	return move;
-}
-
-Common::MoveRequest Parser::ParseQueenMove(Common::Color color, Common::MiniBoard & board, std::string moveString)
-{
-	Common::MoveRequest move;
-	move.type = Common::PieceType::QUEEN;
-
-	return move;
-}
-
-Common::MoveRequest Parser::ParseRookMove(Common::Color color, Common::MiniBoard & board, std::string moveString)
-{
-	Common::MoveRequest move;
-	move.type = Common::PieceType::ROOK;
-
-	return move;
-}
-
-Common::MoveRequest Parser::ParseBishopMove(Common::Color color, Common::MiniBoard & board, std::string moveString)
-{
-	Common::MoveRequest move;
-	move.type = Common::PieceType::BISHOP;
-
-	return move;
-}
-
-Common::MoveRequest Parser::ParseKnightMove(Common::Color color, Common::MiniBoard & board, std::string moveString)
-{
-	Common::MoveRequest move;
-	move.type = Common::PieceType::KNIGHT;
-	move.xOld = -1;
-	move.yOld = -1;
-
-	
 	size_t xPos = moveString.find('x');
 
 	if (std::regex_match(moveString, std::regex("[a-h][1-8]x?[a-h][1-8]")))
@@ -251,10 +274,9 @@ Common::MoveRequest Parser::ParseKnightMove(Common::Color color, Common::MiniBoa
 			move.yNew = GetIntegerRank(color, moveString.at(3));
 		}
 	}
-	else 
+	else
 	{
-		const std::vector<std::pair<int, int>> locs = { {1, 2}, {1, -2}, {-1, 2}, {-1, -2}, {2, 1}, {2, -1}, {-2, 1}, {-2, -1} };
-		std::pair<int, int> start;
+		std::pair<int, int> conditions{ 0, 0 };
 
 		if (std::regex_match(moveString, std::regex("[a-h]x?[a-h][1-8]")))
 		{
@@ -271,8 +293,8 @@ Common::MoveRequest Parser::ParseKnightMove(Common::Color color, Common::MiniBoa
 				move.yNew = GetIntegerRank(color, moveString.at(2));
 			}
 
-			start.first = move.xOld;
-			start.second = -1;
+			conditions.first = move.xOld;
+			conditions.second = -1;
 		}
 		else if (std::regex_match(moveString, std::regex("[1-8]x?[a-h][1-8]")))
 		{
@@ -289,8 +311,8 @@ Common::MoveRequest Parser::ParseKnightMove(Common::Color color, Common::MiniBoa
 				move.yNew = GetIntegerRank(color, moveString.at(2));
 			}
 
-			start.first = -1;
-			start.second = move.yOld;
+			conditions.first = -1;
+			conditions.second = move.yOld;
 		}
 		else
 		{
@@ -305,13 +327,20 @@ Common::MoveRequest Parser::ParseKnightMove(Common::Color color, Common::MiniBoa
 				move.yNew = GetIntegerRank(color, moveString.at(2));
 			}
 
-			start.first = -1;
-			start.second = -1;
+			conditions.first = -1;
+			conditions.second = -1;
 		}
 
-		FindPieceInSpots(board, move, color, locs, start);
+		if (type == Common::PieceType::KING || type == Common::PieceType::KNIGHT)
+		{
+			FindPieceInSpots(board, move, color, locs, conditions);
+		}
+		else
+		{
+			FindPieceOnLines(board, move, color, locs, conditions);
+		}
 	}
-	
+
 	return move;
 }
 

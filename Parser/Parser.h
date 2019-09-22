@@ -21,15 +21,14 @@ public:
 
 private:
 	Common::MoveRequest ParsePawnMove(Common::Color color, Common::MiniBoard & board, std::string moveString);
-	Common::MoveRequest ParseKingMove(Common::Color color, Common::MiniBoard & board, std::string moveString);
-	Common::MoveRequest ParseQueenMove(Common::Color color, Common::MiniBoard & board, std::string moveString);
-	Common::MoveRequest ParseRookMove(Common::Color color, Common::MiniBoard & board, std::string moveString);
-	Common::MoveRequest ParseBishopMove(Common::Color color, Common::MiniBoard & board, std::string moveString);
-	Common::MoveRequest ParseKnightMove(Common::Color color, Common::MiniBoard & board, std::string moveString);
-	
-	int GetIntegerFile(Common::Color color, char c);
-	int GetIntegerRank(Common::Color color, char c);
+	Common::MoveRequest ParseMoveStringLocations(Common::Color color, Common::PieceType type, Common::MiniBoard & board,
+		std::string moveString, const std::vector<std::pair<int, int>> & locs);
+
 	void FindPieceInSpots(Common::MiniBoard & board, Common::MoveRequest & move, Common::Color & color,
 		const std::vector<std::pair<int, int>> & locs, std::pair<int, int> conditions);
+	void FindPieceOnLines(Common::MiniBoard & board, Common::MoveRequest & move, Common::Color & color,
+		const std::vector<std::pair<int, int>> & steps, std::pair<int, int> conditions);
 
+	int GetIntegerFile(Common::Color color, char c);
+	int GetIntegerRank(Common::Color color, char c);
 };
