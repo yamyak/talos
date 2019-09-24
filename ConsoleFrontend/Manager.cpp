@@ -3,6 +3,7 @@
 #include "Manager.h"
 #include "Display.h"
 #include "Game.h"
+#include "Parser.h"
 
 const std::string VALID_MOVE_REQUEST = "Please provide a valid move: ";
 const std::string INVALID_MOVE_FOUND = "That move was invalid, please provide a valid move: ";
@@ -18,7 +19,7 @@ Manager::~Manager()
 void Manager::Start()
 {
 	Display display;
-
+	Parser parser;
 	Game game;
 	Common::MiniBoard board;
 
@@ -33,7 +34,9 @@ void Manager::Start()
 		bool validMove = false;
 		while (!validMove)
 		{
-			Common::MoveRequest move = display.PromptUser(promptMsg);
+			std::string moveString = display.PromptUser(promptMsg);
+
+			Common::MoveRequest move = parser.ParseMove(currentTurn, board, moveString);
 
 			validMove = game.AttemptMove(currentTurn, move, board);
 
