@@ -9,8 +9,5 @@ public:
 	~Manager();
 
 	void Start();
-
-private:
-	void TransposeBoard(Common::MiniBoard & board);
 };
 

@@ -43,27 +43,12 @@ void Manager::Start()
 			promptMsg = INVALID_MOVE_FOUND;
 		}
 
+		board.TransposeBoard();
+
 		currentTurn = (currentTurn == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
 	}
 
 	std::string winner = (currentTurn == Common::Color::WHITE) ? "Black" : "White";
 	winner = "The " + winner + " player has won!";
 	display.InformUser(winner);
-}
-
-void Manager::TransposeBoard(Common::MiniBoard & board)
-{
-	Common::MiniBoard tempBoard(board);
-	board.Clear();
-
-	for (int i = 0; i < Common::BOARD_LENGTH; i++)
-	{
-		for (int j = 0; j < Common::BOARD_LENGTH; j++)
-		{
-			if (tempBoard.data[i][j].occupied)
-			{
-				board.data[Common::BOARD_LENGTH - i - 1][Common::BOARD_LENGTH - j - 1].Update(tempBoard.data[i][j]);
-			}
-		}
-	}
 }

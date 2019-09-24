@@ -84,6 +84,23 @@ namespace Common
 				}
 			}
 		}
+
+		void TransposeBoard()
+		{
+			Common::MiniBoard tempBoard(*this);
+			Clear();
+
+			for (int i = 0; i < Common::BOARD_LENGTH; i++)
+			{
+				for (int j = 0; j < Common::BOARD_LENGTH; j++)
+				{
+					if (tempBoard.data[i][j].occupied)
+					{
+						data[Common::BOARD_LENGTH - i - 1][Common::BOARD_LENGTH - j - 1].Update(tempBoard.data[i][j]);
+					}
+				}
+			}
+		}
 	};
 
 	// structure provided to backend from the player
