@@ -168,6 +168,14 @@
     <ClCompile Include="ScriptReader.cpp" />
     <ClCompile Include="TestHarness.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Game\Game.vcxproj">
+      <Project>{abfdaa79-c998-4f34-bd31-01ebbca28d2e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Parser\Parser.vcxproj">
+      <Project>{b08db3ee-3774-486e-82df-a4e9bf0c2999}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
