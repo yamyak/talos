@@ -12,20 +12,29 @@ Validator::~Validator()
 }
 
 // check that path from start location to destination is clear of any pieces
-bool Validator::CheckPathForObstacles(Common::MoveRequest & move, Common::MiniBoard & board)
+bool Validator::CheckPathForObstacles(Common::Color color, Common::MoveRequest & move, Common::MiniBoard & board)
 {
 	bool valid = true;
 
 	switch (move.type)
 	{
 	case Common::PieceType::PAWN:
-		// if moved forward 2 units
-		if (move.yNew - move.yOld == 2)
+	{
+		// if not capturing piece
+		if (move.xNew - move.xOld == 0)
 		{
-			// make sure space 1 unit ahead is not occupied
-			valid = !board.data[move.xNew][move.yNew - 1].occupied;
+			// make sure move destination is unoccupied
+			valid = board.data[move.xNew][move.yNew].occupied;
+
+			// if moving 2 spaces
+			if (move.yNew - move.yOld == 2)
+			{
+				// make sure space 1 unit ahead is not occupied
+				valid = valid && !board.data[move.xNew][move.yNew - 1].occupied;
+			}
 		}
 		break;
+	}
 	case Common::PieceType::BISHOP:
 	case Common::PieceType::ROOK:
 	case Common::PieceType::QUEEN:
@@ -52,6 +61,33 @@ bool Validator::CheckPathForObstacles(Common::MoveRequest & move, Common::MiniBo
 			yStart += yDelta;
 		}
 		break;
+	}
+	case Common::PieceType::KING:
+	{
+		if (move.xNew - move.xOld == 2)
+		{
+			for (int i = move.xOld + 1; i < Common::BOARD_LENGTH - 1; i++)
+			{
+				valid = valid && !board.data[i][move.yOld].occupied;
+				if (i - move.xOld <= 2)
+				{
+					std::pair<int, int> loc(i, move.yOld);
+					valid = valid && CheckIfKingInCheck(loc, color, board);
+				}
+			}
+		}
+		else if (move.xNew - move.xOld == -2)
+		{
+			for (int i = move.xOld - 1; i > 0; i--)
+			{
+				valid = valid && !board.data[i][move.yOld].occupied;
+				if (i - move.xOld >= -2)
+				{
+					std::pair<int, int> loc(i, move.yOld);
+					valid = valid && CheckIfKingInCheck(loc, color, board);
+				}
+			}
+		}
 	}
 	default:
 		break;
@@ -140,14 +176,14 @@ bool Validator::CheckMovePath(Common::MoveRequest & move, Common::MiniBoard & bo
 			// if target location occupied, already checked that piece is enemy type
 			// don't need to check it again	
 			// make sure only moved forward 1 unit and target is occupied
-			valid = yDelta == 1 && board.data[move.xNew][move.yNew].occupied;
+			valid = yDelta == 1 && (board.data[move.xNew][move.yNew].occupied || board.data[move.xNew][move.yNew].ghost);
 		}
 		else if(xDeltaAbs == 0)
 		{
 			// make sure either:
 			//	1. moved forward 1 unit
 			//	2. moved forward 2 units but previously at initial position
-			valid = yDelta == 1 || (yDelta == 2 && move.yOld == 1);
+			valid = yDelta == 1 || (yDelta == 2 && !board.data[move.xOld][move.yOld].moved);
 		}
 		break;
 	case Common::PieceType::BISHOP:
@@ -169,10 +205,48 @@ bool Validator::CheckMovePath(Common::MoveRequest & move, Common::MiniBoard & bo
 	case Common::PieceType::KING:
 		// check that king move only 1 step in any direction
 		valid = (xDeltaAbs == 0 && yDeltaAbs == 1) || (xDeltaAbs == 1 && yDeltaAbs == 0) || (xDeltaAbs == 1 && yDeltaAbs == 1);
+		// check that king able to castle right
+		valid = valid || (xDelta == 2 && yDelta == 0 && !board.data[move.xOld][move.yOld].moved && !board.data[Common::BOARD_LENGTH - 1][0].moved);
+		// check that king able to castle left
+		valid = valid || (xDelta == -2 && yDelta == 0 && !board.data[move.xOld][move.yOld].moved && !board.data[0][0].moved);
 		break;
 	default:
 		break;
 	}
+
+	return valid;
+}
+
+// check if king is in check
+// returns false if king IS IN check
+bool Validator::CheckIfKingInCheck(std::pair<int, int> loc, Common::Color color, Common::MiniBoard & board)
+{
+	bool valid = true;
+
+	// check for special case where king attacked by pawn
+	valid = CheckPawnAggressors(loc, color, board);
+
+	// check for special case where king attacked by knight
+	valid = valid && CheckKnightAggressors(loc, color, board);
+
+	std::set<Common::PieceType> lethalTypes;
+
+	// check to see if 4 diagonals are clear of bishops and queens
+	lethalTypes.insert(Common::PieceType::BISHOP);
+	lethalTypes.insert(Common::PieceType::QUEEN);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, 1, 1, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, -1, 1, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, 1, -1, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, -1, -1, lethalTypes);
+
+	// check to see if 4 straight lanes are clear of rooks and queens
+	lethalTypes.clear();
+	lethalTypes.insert(Common::PieceType::ROOK);
+	lethalTypes.insert(Common::PieceType::QUEEN);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, 1, 0, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, -1, 0, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, 0, 1, lethalTypes);
+	valid = valid && CheckStraightPathForAggressors(loc, color, board, 0, -1, lethalTypes);
 
 	return valid;
 }
@@ -205,7 +279,15 @@ bool Validator::CheckMoveRequest(Common::Color color, Common::MoveRequest & move
 	// check that move is valid for piece
 	valid = valid && CheckMovePath(move, board);
 	// check that move path is clear of other pieces
-	valid = valid && CheckPathForObstacles(move, board);
+	valid = valid && CheckPathForObstacles(color, move, board);
+
+	// pawn promotion special case verification
+	if (move.type == Common::PieceType::PAWN && move.yNew == Common::BOARD_LENGTH - 1)
+	{
+		valid = valid && (move.pawnPromotion == Common::PieceType::QUEEN ||
+			move.pawnPromotion == Common::PieceType::ROOK || move.pawnPromotion == Common::PieceType::BISHOP ||
+			move.pawnPromotion == Common::PieceType::KNIGHT);
+	}
 
 	return valid;
 }

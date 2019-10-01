@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+
 
 class Manager
 {
@@ -9,8 +9,5 @@ public:
 	~Manager();
 
 	void Start();
-
-private:
-	void TransposeBoard(Common::MiniBoard & board);
 };
 

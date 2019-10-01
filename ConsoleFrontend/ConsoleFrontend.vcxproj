@@ -91,7 +91,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../Game</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Game;../Parser;../include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,7 +143,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../Game</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Game;../Parser;../include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -171,6 +171,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Game\Game.vcxproj">
       <Project>{abfdaa79-c998-4f34-bd31-01ebbca28d2e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Parser\Parser.vcxproj">
+      <Project>{b08db3ee-3774-486e-82df-a4e9bf0c2999}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
