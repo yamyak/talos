@@ -18,7 +18,7 @@ public:
 	DISPLAY_API ~Display();
 
 	DISPLAY_API bool DisplayBoard(Common::Color currentSide, Common::MiniBoard & board);
-	DISPLAY_API Common::MoveRequest PromptUser(std::string & msg);
+	DISPLAY_API std::string PromptUser(std::string & msg);
 	DISPLAY_API void InformUser(std::string & msg);
 
 private:
