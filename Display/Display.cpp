@@ -1,4 +1,7 @@
-#include "pch.h"
+#include "stdafx.h"
+
+#define DISPLAY_EXPORTS
+
 #include "Display.h"
 
 #include <iostream>
@@ -75,7 +78,6 @@ void Display::PrintLeftKey(Common::Color currentSide, int index)
 
 std::string Display::PromptUser(std::string & msg)
 {
-
 	std::cout << msg;
 
 	std::string moveStr;
@@ -112,29 +114,29 @@ std::map<int, std::map<int, std::string>> Display::ConvertBoardToText(Common::Co
 				Common::PieceInfo & p = board.data[j][i];
 
 				output[iT][jT] = (p.color == Common::Color::WHITE) ? "W" : "B";
-				
+
 				switch (p.type)
 				{
-					case Common::PieceType::KING:
-						output[iT][jT] += "K";
-						break;
-					case Common::PieceType::QUEEN:
-						output[iT][jT] += "Q";
-						break;
-					case Common::PieceType::KNIGHT:
-						output[iT][jT] += "N";
-						break;
-					case Common::PieceType::BISHOP:
-						output[iT][jT] += "B";
-						break;
-					case Common::PieceType::ROOK:
-						output[iT][jT] += "R";
-						break;
-					case Common::PieceType::PAWN:
-						output[iT][jT] += "P";
-						break;
-					default:
-						break;
+				case Common::PieceType::KING:
+					output[iT][jT] += "K";
+					break;
+				case Common::PieceType::QUEEN:
+					output[iT][jT] += "Q";
+					break;
+				case Common::PieceType::KNIGHT:
+					output[iT][jT] += "N";
+					break;
+				case Common::PieceType::BISHOP:
+					output[iT][jT] += "B";
+					break;
+				case Common::PieceType::ROOK:
+					output[iT][jT] += "R";
+					break;
+				case Common::PieceType::PAWN:
+					output[iT][jT] += "P";
+					break;
+				default:
+					break;
 				}
 			}
 		}
