@@ -17,7 +17,7 @@ bool MakeMove(Game & game, Parser & parser, Common::MiniBoard & board, Common::C
 
 	bool validMove = game.AttemptMove(turn, move, board);
 
-	//board.TransposeBoard();
+	board.TransposeBoard();
 	turn = (turn == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
 
 	validMove = validMove && game.CheckGameStatus(turn, board);
@@ -29,13 +29,13 @@ int main(int argc, char** argv)
 {
 	std::string cmdArgs;
 
-	if (argc > 1)
+	if (argc > 2)
 	{
 		return -1;
 	}
-	else if (argc == 1)
+	else if (argc == 2)
 	{
-		cmdArgs = argv[0];
+		cmdArgs = argv[1];
 	}
 
 	ConfigReader config(cmdArgs);
@@ -56,16 +56,22 @@ int main(int argc, char** argv)
 
 		for (std::pair<std::string, std::string> & turn : moves)
 		{
-			count++;
-			if (!MakeMove(game, parser, board, currentTurn, turn.first))
+			if (!turn.first.empty())
 			{
-				break;
+				count++;
+				if (!MakeMove(game, parser, board, currentTurn, turn.first))
+				{
+					break;
+				}
 			}
 
-			count++;
-			if (!MakeMove(game, parser, board, currentTurn, turn.second))
+			if (!turn.second.empty())
 			{
-				break;
+				count++;
+				if (!MakeMove(game, parser, board, currentTurn, turn.second))
+				{
+					break;
+				}
 			}
 		}
 

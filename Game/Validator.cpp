@@ -24,7 +24,7 @@ bool Validator::CheckPathForObstacles(Common::Color color, Common::MoveRequest &
 		if (move.xNew - move.xOld == 0)
 		{
 			// make sure move destination is unoccupied
-			valid = board.data[move.xNew][move.yNew].occupied;
+			valid = !board.data[move.xNew][move.yNew].occupied;
 
 			// if moving 2 spaces
 			if (move.yNew - move.yOld == 2)
@@ -44,8 +44,16 @@ bool Validator::CheckPathForObstacles(Common::Color color, Common::MoveRequest &
 		int yStart = move.yOld;
 		int xDelta = move.xNew - xStart;
 		int yDelta = move.yNew - yStart;
-		xDelta = xDelta / std::abs(xDelta);
-		yDelta = yDelta / std::abs(yDelta);
+		
+		if (xDelta != 0)
+		{
+			xDelta = xDelta / std::abs(xDelta);
+		}
+
+		if (yDelta != 0)
+		{
+			yDelta = yDelta / std::abs(yDelta);
+		}
 		
 		// start from first step on path to target
 		xStart += xDelta;

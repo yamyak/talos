@@ -18,7 +18,8 @@ Common::MoveRequest Parser::ParseMove(Common::Color color, Common::MiniBoard & b
 	Common::MoveRequest move;
 
 	// queen side castling
-	if (std::regex_match(moveString, std::regex("0-0-0")))
+	if (std::regex_search(moveString, std::regex("0-0-0")) ||
+		std::regex_search(moveString, std::regex("O-O-O")))
 	{
 		move.type = Common::PieceType::KING;
 		if (color == Common::Color::WHITE)
@@ -37,7 +38,8 @@ Common::MoveRequest Parser::ParseMove(Common::Color color, Common::MiniBoard & b
 		}
 	}
 	// king side castling
-	else if (std::regex_match(moveString, std::regex("0-0")))
+	else if (std::regex_search(moveString, std::regex("0-0")) ||
+		std::regex_search(moveString, std::regex("O-O")))
 	{
 		move.type = Common::PieceType::KING;
 		if (color == Common::Color::WHITE)
@@ -56,7 +58,7 @@ Common::MoveRequest Parser::ParseMove(Common::Color color, Common::MiniBoard & b
 		}
 	}
 	// king, queen, rook, bishop, knight, or pawn move
-	else if(std::regex_match(moveString, std::regex("^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8]")))
+	else if(std::regex_search(moveString, std::regex("^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8]")))
 	{
 		switch (moveString.at(0))
 		{
@@ -107,7 +109,7 @@ void Parser::FindPieceInSpots(Common::MiniBoard & board, Common::MoveRequest & m
 	for (const std::pair<int, int> & loc : locs)
 	{
 		int xLoc = move.xNew + loc.first;
-		int yLoc = move.yNew + loc.first;
+		int yLoc = move.yNew + loc.second;
 
 		if (Common::CheckIfOnBoard(xLoc, yLoc) &&
 			board.data[xLoc][yLoc].occupied &&
@@ -223,7 +225,7 @@ Common::MoveRequest Parser::ParsePawnMove(Common::Color color, Common::MiniBoard
 		xPos = 2;
 	}
 
-	if (std::regex_match(moveString, std::regex("[QRBN]")))
+	if (std::regex_search(moveString, std::regex("[QRBN]")))
 	{
 		switch (moveString.at(xPos))
 		{
@@ -257,7 +259,7 @@ Common::MoveRequest Parser::ParseMoveStringLocations(Common::Color color, Common
 
 	size_t xPos = moveString.find('x');
 
-	if (std::regex_match(moveString, std::regex("[a-h][1-8]x?[a-h][1-8]")))
+	if (std::regex_search(moveString, std::regex("[a-h][1-8]x?[a-h][1-8]")))
 	{
 		if (xPos != std::string::npos)
 		{
@@ -278,7 +280,7 @@ Common::MoveRequest Parser::ParseMoveStringLocations(Common::Color color, Common
 	{
 		std::pair<int, int> conditions{ 0, 0 };
 
-		if (std::regex_match(moveString, std::regex("[a-h]x?[a-h][1-8]")))
+		if (std::regex_search(moveString, std::regex("[a-h]x?[a-h][1-8]")))
 		{
 			if (xPos != std::string::npos)
 			{
@@ -296,7 +298,7 @@ Common::MoveRequest Parser::ParseMoveStringLocations(Common::Color color, Common
 			conditions.first = move.xOld;
 			conditions.second = -1;
 		}
-		else if (std::regex_match(moveString, std::regex("[1-8]x?[a-h][1-8]")))
+		else if (std::regex_search(moveString, std::regex("[1-8]x?[a-h][1-8]")))
 		{
 			if (xPos != std::string::npos)
 			{
@@ -323,8 +325,8 @@ Common::MoveRequest Parser::ParseMoveStringLocations(Common::Color color, Common
 			}
 			else
 			{
-				move.xNew = GetIntegerFile(color, moveString.at(1));
-				move.yNew = GetIntegerRank(color, moveString.at(2));
+				move.xNew = GetIntegerFile(color, moveString.at(0));
+				move.yNew = GetIntegerRank(color, moveString.at(1));
 			}
 
 			conditions.first = -1;
@@ -457,28 +459,28 @@ int Parser::GetIntegerRank(Common::Color color, char c)
 		switch (c)
 		{
 		case('8'):
-			rank = 7;
+			rank = 0;
 			break;
 		case('7'):
-			rank = 6;
-			break;
-		case('6'):
-			rank = 5;
-			break;
-		case('5'):
-			rank = 4;
-			break;
-		case('4'):
-			rank = 3;
-			break;
-		case('3'):
-			rank = 2;
-			break;
-		case('2'):
 			rank = 1;
 			break;
+		case('6'):
+			rank = 2;
+			break;
+		case('5'):
+			rank = 3;
+			break;
+		case('4'):
+			rank = 4;
+			break;
+		case('3'):
+			rank = 5;
+			break;
+		case('2'):
+			rank = 6;
+			break;
 		case('1'):
-			rank = 0;
+			rank = 7;
 			break;
 		default:
 			break;

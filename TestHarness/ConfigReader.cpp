@@ -27,6 +27,11 @@ void ConfigReader::ReadConfig(std::string & configFile)
 		std::string line;
 		while (std::getline(myFile, line))
 		{
+			if (line.empty())
+			{
+				continue;
+			}
+
 			if (line.compare("[BASE_PATH]") == 0)
 			{
 				state = BASE_PATH;

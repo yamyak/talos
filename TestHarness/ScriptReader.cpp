@@ -34,9 +34,10 @@ void ScriptReader::ReadScript(std::string & filePath)
 			{
 				script += " ";
 				script += line;
+				continue;
 			}
 
-			if (std::regex_match(line, std::regex("^[Result")))
+			if (std::regex_search(line, std::regex("^\\[Result")))
 			{
 				std::smatch match;
 				std::regex_search(line, match, std::regex("[01]-[01]"));
@@ -51,13 +52,13 @@ void ScriptReader::ReadScript(std::string & filePath)
 					m_winner = Common::Color::BLACK;
 				}
 			}
-			else if (std::regex_match(line, std::regex("^[PlyCount")))
+			else if (std::regex_search(line, std::regex("^\\[PlyCount")))
 			{
 				std::smatch match;
 				std::regex_search(line, match, std::regex("[0-9]+"));
 				m_moveCount = stoi(match[0]);
 			}
-			else if (std::regex_match(line, std::regex("^1\.")))
+			else if (std::regex_search(line, std::regex("^1\\.")))
 			{
 				movesFound = true;
 
@@ -83,7 +84,7 @@ void ScriptReader::ParseMoves(std::string & script)
 
 	for (std::string & tok : tokens)
 	{
-		if (std::regex_match(tok, std::regex("^[0-9]+\.")))
+		if (std::regex_search(tok, std::regex("^[0-9]+\\.")))
 		{
 			std::size_t period = tok.find('.');
 			if (period != tok.size() - 1)
@@ -99,12 +100,12 @@ void ScriptReader::ParseMoves(std::string & script)
 		if (first)
 		{
 			move.first = tok;
+			m_moveQueue.push_back(move);
 			first = false;
 		}
 		else
 		{
-			move.second = tok;
-			m_moveQueue.push_back(move);
+			m_moveQueue[m_moveQueue.size() - 1].second = tok;
 			first = true;
 		}
 	}
@@ -119,7 +120,14 @@ std::vector<std::string> ScriptReader::TokenizeScript(std::string & script)
 
 	while (getline(ss, tok, ' '))
 	{
-		tokens.push_back(tok);
+		if (!tok.empty())
+		{
+			if (!std::regex_search(tok, std::regex("0-1")) &&
+				!std::regex_search(tok, std::regex("1-0")))
+			{
+				tokens.push_back(tok);
+			}
+		}
 	}
 
 	return tokens;
@@ -143,7 +151,7 @@ void ScriptReader::CleanComments(std::string & script)
 				{
 					if (*it2 == '}')
 					{
-						script.erase(it1, it2);
+						script.erase(it1, it2 + 1);
 						erased = true;
 						break;
 					}

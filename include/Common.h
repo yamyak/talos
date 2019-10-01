@@ -65,10 +65,12 @@ namespace Common
 			{
 				for (int j = 0; j < BOARD_LENGTH; j++)
 				{
-					if (b.data[i][j].occupied)
+					if (b.data[i][j].occupied || b.data[i][j].ghost)
 					{
 						data[i][j].Update(b.data[i][j]);
 					}
+					
+					
 				}
 			}
 		}
@@ -109,7 +111,7 @@ namespace Common
 			{
 				for (int j = 0; j < Common::BOARD_LENGTH; j++)
 				{
-					if (tempBoard.data[i][j].occupied)
+					if (tempBoard.data[i][j].occupied || tempBoard.data[i][j].ghost)
 					{
 						data[Common::BOARD_LENGTH - i - 1][Common::BOARD_LENGTH - j - 1].Update(tempBoard.data[i][j]);
 					}
