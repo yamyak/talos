@@ -36,7 +36,7 @@ namespace Common
 
 		void Update(PieceInfo & p)
 		{
-			occupied = true;
+			occupied = p.occupied;
 			type = p.type;
 			color = p.color;
 			moved = p.moved;

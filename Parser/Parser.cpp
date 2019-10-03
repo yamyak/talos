@@ -192,7 +192,7 @@ Common::MoveRequest Parser::ParsePawnMove(Common::Color color, Common::MiniBoard
 		move.yNew = GetIntegerRank(color, moveString.at(xPos + 2));
 		move.xOld = GetIntegerFile(color, moveString.at(xPos - 1));
 		move.yOld = -1;
-		for (int j = move.yNew; j >= 0; j--)
+		for (int j = move.yNew - 1; j >= 0; j--)
 		{
 			if (board.data[move.xOld][j].occupied && 
 				board.data[move.xOld][j].color == color &&
@@ -227,6 +227,11 @@ Common::MoveRequest Parser::ParsePawnMove(Common::Color color, Common::MiniBoard
 
 	if (std::regex_search(moveString, std::regex("[QRBN]")))
 	{
+		if (moveString.find('=') != std::string::npos)
+		{
+			xPos++;
+		}
+
 		switch (moveString.at(xPos))
 		{
 			case('Q'):

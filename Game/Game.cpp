@@ -411,7 +411,7 @@ bool Game::CheckGameStatus(Common::Color & color, Common::MiniBoard & board)
 					for (Common::MoveRequest & move : moves)
 					{
 						// apply each move to test board
-						Common::MiniBoard & testBoard(board);
+						Common::MiniBoard testBoard(board);
 						ApplyMove(move, testBoard);
 
 						// get location of king

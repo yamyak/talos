@@ -7,17 +7,29 @@
 
 #include "Common.h"
 #include "Game.h"
+#include "Display.h"
 #include "Parser.h"
 #include "ConfigReader.h"
 #include "ScriptReader.h"
 
-bool MakeMove(Game & game, Parser & parser, Common::MiniBoard & board, Common::Color & turn, std::string & moveStr)
+bool MakeMove(Game & game, Parser & parser, Display & display, Common::MiniBoard & board, Common::Color & turn, std::string & moveStr, bool verbose)
 {
 	Common::MoveRequest move = parser.ParseMove(turn, board, moveStr);
 
 	bool validMove = game.AttemptMove(turn, move, board);
 
+	if (verbose && turn == Common::Color::WHITE)
+	{
+		display.DisplayBoard(Common::Color::WHITE, board);
+	}
+
 	board.TransposeBoard();
+
+	if (verbose && turn == Common::Color::BLACK)
+	{
+		display.DisplayBoard(Common::Color::WHITE, board);
+	}
+
 	turn = (turn == Common::Color::WHITE) ? Common::Color::BLACK : Common::Color::WHITE;
 
 	validMove = validMove && game.CheckGameStatus(turn, board);
@@ -27,39 +39,54 @@ bool MakeMove(Game & game, Parser & parser, Common::MiniBoard & board, Common::C
 
 int main(int argc, char** argv)
 {
-	std::string cmdArgs;
+	std::string configPath;
 
-	if (argc > 2)
+	bool verbose = false;
+
+	if (argc > 3 || argc < 2)
 	{
 		return -1;
 	}
-	else if (argc == 2)
+	else
 	{
-		cmdArgs = argv[1];
+		configPath = argv[1];
+
+		if (argc == 3 && std::string(argv[2]).compare("-v") == 0)
+		{
+			verbose = true;
+		}
 	}
 
-	ConfigReader config(cmdArgs);
+	ConfigReader config(configPath);
+
+	bool testStatus = true;
 
 	for (std::string & file : config.GetFilePaths())
 	{
-		std::cout << "Script File: " << file << std::endl;
+		std::cout << "Script File: " << file << std::endl << std::endl;
 		ScriptReader script(file);
 
 		int count = 0;
-		Common::Color currentTurn = Common::Color::WHITE;;
+		Common::Color currentTurn = Common::Color::WHITE;
 		MoveQueue moves = script.GetQueue();
 
 		Parser parser;
+		Display display;
 		Game game;
 		Common::MiniBoard board;
 		game.Initialize(board);
+
+		if (verbose)
+		{
+			display.DisplayBoard(currentTurn, board);
+		}
 
 		for (std::pair<std::string, std::string> & turn : moves)
 		{
 			if (!turn.first.empty())
 			{
 				count++;
-				if (!MakeMove(game, parser, board, currentTurn, turn.first))
+				if (!MakeMove(game, parser, display, board, currentTurn, turn.first, verbose))
 				{
 					break;
 				}
@@ -68,7 +95,7 @@ int main(int argc, char** argv)
 			if (!turn.second.empty())
 			{
 				count++;
-				if (!MakeMove(game, parser, board, currentTurn, turn.second))
+				if (!MakeMove(game, parser, display, board, currentTurn, turn.second, verbose))
 				{
 					break;
 				}
@@ -80,10 +107,12 @@ int main(int argc, char** argv)
 		if (count != script.GetMoveCount())
 		{
 			std::cout << "Script Failed: Error at move " << count << std::endl;
+			testStatus = false;
 		}
 		else if (currentTurn != script.GetWinner())
 		{
 			std::cout << "Script Failed: Incorrect winner " << ((currentTurn == Common::Color::WHITE) ? "White" : "Black") << std::endl;
+			testStatus = false;
 		}
 		else
 		{
@@ -91,6 +120,15 @@ int main(int argc, char** argv)
 		}
 
 		std::cout << std::endl;
+	}
+
+	if (testStatus)
+	{
+		std::cout << "All Scripts Passed" << std::endl;
+	}
+	else
+	{
+		std::cout << "Script Failures Found" << std::endl;
 	}
 
 	return 0;

@@ -19,8 +19,6 @@ bool Display::DisplayBoard(Common::Color currentSide, Common::MiniBoard & board)
 {
 	bool status = true;
 
-	std::cout << std::endl;
-
 	std::map<int, std::map<int, std::string>> boardText = ConvertBoardToText(currentSide, board);
 
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
@@ -97,12 +95,10 @@ std::map<int, std::map<int, std::string>> Display::ConvertBoardToText(Common::Co
 
 	for (int i = 0; i < Common::BOARD_LENGTH; i++)
 	{
-		//int iT = (currentSide == Common::Color::WHITE) ? Common::BOARD_LENGTH - i - 1 : i;
 		int iT = Common::BOARD_LENGTH - i - 1;
 
 		for (int j = 0; j < Common::BOARD_LENGTH; j++)
 		{
-			//int jT = (currentSide == Common::Color::BLACK) ? Common::BOARD_LENGTH - j - 1 : j;
 			int jT = j;
 
 			if (!board.data[j][i].occupied)

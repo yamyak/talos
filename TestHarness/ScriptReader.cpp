@@ -90,6 +90,11 @@ void ScriptReader::ParseMoves(std::string & script)
 			if (period != tok.size() - 1)
 			{
 				tok = tok.substr(period + 1);
+
+				while (tok.at(0) == '.')
+				{
+					tok = tok.substr(1);
+				}
 			}
 			else
 			{

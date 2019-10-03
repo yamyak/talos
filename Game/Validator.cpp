@@ -110,7 +110,7 @@ bool Validator::CheckPawnAggressors(std::pair<int, int> kingLoc, Common::Color c
 	bool valid = true;
 
 	// check 2 1-step forward diagonal to see if pawn there
-	std::vector<int> locs = { kingLoc.first - 1, kingLoc.second + 1 };
+	std::vector<int> locs = { kingLoc.first - 1, kingLoc.first + 1 };
 	for (int x : locs)
 	{
 		// check if potential pawn location is on the board
@@ -208,7 +208,7 @@ bool Validator::CheckMovePath(Common::MoveRequest & move, Common::MiniBoard & bo
 		break;
 	case Common::PieceType::QUEEN:
 		// check that either bishop or rook rules apply
-		valid = (xDeltaAbs == yDeltaAbs && xDeltaAbs != 0) || (xDeltaAbs != 0 && yDeltaAbs == 0) || (xDeltaAbs == 0 && yDeltaAbs != 1);
+		valid = (xDeltaAbs == yDeltaAbs && xDeltaAbs != 0) || (xDeltaAbs != 0 && yDeltaAbs == 0) || (xDeltaAbs == 0 && yDeltaAbs != 0);
 		break;
 	case Common::PieceType::KING:
 		// check that king move only 1 step in any direction
