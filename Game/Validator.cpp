@@ -45,11 +45,13 @@ bool Validator::CheckPathForObstacles(Common::Color color, Common::MoveRequest &
 		int xDelta = move.xNew - xStart;
 		int yDelta = move.yNew - yStart;
 		
+		// get 1 unit step direction
 		if (xDelta != 0)
 		{
 			xDelta = xDelta / std::abs(xDelta);
 		}
 
+		// get 1 unit step direction
 		if (yDelta != 0)
 		{
 			yDelta = yDelta / std::abs(yDelta);
@@ -72,11 +74,16 @@ bool Validator::CheckPathForObstacles(Common::Color color, Common::MoveRequest &
 	}
 	case Common::PieceType::KING:
 	{
+		// only checking for king if castling left or right
 		if (move.xNew - move.xOld == 2)
 		{
+			// check that all locations between king and rook are empty
 			for (int i = move.xOld + 1; i < Common::BOARD_LENGTH - 1; i++)
 			{
 				valid = valid && !board.data[i][move.yOld].occupied;
+
+				// for locations that king will cross or step into (2 steps),
+				// check if king will be in check while moving
 				if (i - move.xOld <= 2)
 				{
 					std::pair<int, int> loc(i, move.yOld);
@@ -86,9 +93,13 @@ bool Validator::CheckPathForObstacles(Common::Color color, Common::MoveRequest &
 		}
 		else if (move.xNew - move.xOld == -2)
 		{
+			// check that all locations between king and rook are empty
 			for (int i = move.xOld - 1; i > 0; i--)
 			{
 				valid = valid && !board.data[i][move.yOld].occupied;
+
+				// for locations that king will cross or step into (2 steps),
+				// check if king will be in check while moving
 				if (i - move.xOld >= -2)
 				{
 					std::pair<int, int> loc(i, move.yOld);
@@ -327,6 +338,7 @@ bool Validator::CheckStraightPathForAggressors(std::pair<int, int> kingLoc, Comm
 			break;
 		}
 
+		// move to next step in path
 		xStart += xStep;
 		yStart += yStep;
 	}
